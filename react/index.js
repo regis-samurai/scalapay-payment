@@ -42,12 +42,13 @@ class ModalScalapay extends React.Component {
     createOrder(bodyScalapay).then((response) => {
       if (response.token) {
         this.setState({ changeImgOne: check, changeImgTwo: numbertwoanimated })
+        this.backdrop()
+
         setTimeout(() => {
-          document.body.innerHTML += '<div className="backgroundModal"></div>'
           this.scalapayCheckout = window.open(
             response.checkoutUrl,
             '',
-            'toolbar=no,menubar=no,width=600,height=700'
+            'menubar=0,location=0,centerscreen,toolbar=no,menubar=no,width=600,height=700'
           )
           console.log('DESPUÉS de addEventListener ', modalCheckout)
         }, 3000)
@@ -68,6 +69,7 @@ class ModalScalapay extends React.Component {
       e.data.event === 'payment-result'
     ) {
       this.scalapayCheckout.close()
+      this.backdrop(false)
 
       // TODO: Iniciar loader
       captureOrder(e.data.orderToken)
@@ -92,6 +94,30 @@ class ModalScalapay extends React.Component {
   // TODO: Usar esto para redirigir a orderPlaced o informar error
   respondTransaction = (status) => {
     $(window).trigger('transactionValidation.vtex', [status])
+  }
+
+  backdrop = (active = true) => {
+    const $div = $('#scalapay-background');
+    
+    if (active && !$div.length) {
+      const el = document.createElement('div')
+
+      $(el)
+        .attr('id', 'scalapay-background')
+        .css({
+          'background-color': 'rgba(0,0,0,0.9)',
+          position: 'absolute',
+          width: '100%',
+          height: '100vh',
+          top: 0,
+          'z-index': '1000',
+        })
+        .appendTo($('body'))
+    }
+
+    if (!active && $div.length) {
+      $div.remove()
+    }
   }
 
   fillBody = (url, order) => {

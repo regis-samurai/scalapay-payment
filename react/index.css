@@ -13,7 +13,7 @@
   z-index: 999;
 }
 
-.titleHeader{
+.titleHeader {
   text-align: center;
   font-size: 18px;
   font-weight: 800;
@@ -21,24 +21,24 @@
   margin-left: 20px;
 }
 
-.headerModal{
+.headerModal {
   height: 50px;
   align-items: center;
   padding: 15px;
   background: #f0f0f0;
 }
 
-.buttonCancel{
+.buttonCancel {
   width: 25px;
   float: right;
 }
 
-.imgInfo{
+.imgInfo {
   width: 25%;
   margin-right: 20px;
 }
 
-.textInfo{
+.textInfo {
   font-size: 16px;
 }
 
@@ -46,63 +46,59 @@
   float: left;
 }
 
-#column1{
+#column1 {
   width: 20%;
 }
 
-#column2{
+#column2 {
   width: 80%;
 }
 
-
 /* Clear floats after the columns */
 .row:after {
-  content: "";
+  content: '';
   display: table;
   clear: both;
 }
 
-.row{
+.row {
   padding: 50px 40px 0 40px;
 }
 
-.containerInfo{
+.containerInfo {
   display: flex;
   margin-bottom: 40px;
   align-items: center;
 }
 
-.imgLoading{
+.imgLoading {
   width: 50%;
   padding: 5px;
 }
 
-.verticalLine{
+.verticalLine {
   border-left: 3px solid #f9aac8;
   height: 80px;
   width: 10%;
   margin-left: 25px;
 }
 
-.disableWin{
+.disableWin {
   pointer-events: none;
 }
 
-
-.containerFooter{
+.containerFooter {
   background: #f0f0f0;
   padding: 5px 10px 5px 30px;
   align-items: center;
   display: flex;
 }
 
-.containerFooter p{
+.containerFooter p {
   margin-top: 10px;
 }
 
-.containerFooter img{
+.containerFooter img {
   width: 20px;
-  margin-right: 10px
+  margin-right: 10px;
 }
-
-
