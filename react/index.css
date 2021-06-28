@@ -1,9 +1,6 @@
 .wrapper {
-  align-items: center;
   background: white;
-  display: flex;
-  flex-direction: column;
-  height: 500px;
+  height: 545px;
   justify-content: center;
   left: 0;
   margin-left: auto;
@@ -16,19 +13,96 @@
   z-index: 999;
 }
 
-.buttonDanger {
-  color: #fff;
-  background-color: #d9534f;
-  border-color: #d43f3a;
+.titleHeader{
+  text-align: center;
+  font-size: 18px;
+  font-weight: 800;
+  margin-top: 15px;
+  margin-left: 20px;
 }
 
-.buttonSuccess {
-  color: #fff;
-  background-color: #8bc34a;
-  border-color: #8bc34a;
+.headerModal{
+  height: 50px;
+  align-items: center;
+  padding: 15px;
+  background: #f0f0f0;
 }
 
-.appPayload {
-  width: 100%;
-  word-break: break-word;
+.buttonCancel{
+  width: 25px;
+  float: right;
 }
+
+.imgInfo{
+  width: 25%;
+  margin-right: 20px;
+}
+
+.textInfo{
+  font-size: 16px;
+}
+
+.column {
+  float: left;
+}
+
+#column1{
+  width: 20%;
+}
+
+#column2{
+  width: 80%;
+}
+
+
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.row{
+  padding: 50px 40px 0 40px;
+}
+
+.containerInfo{
+  display: flex;
+  margin-bottom: 40px;
+  align-items: center;
+}
+
+.imgLoading{
+  width: 50%;
+  padding: 5px;
+}
+
+.verticalLine{
+  border-left: 3px solid #f9aac8;
+  height: 80px;
+  width: 10%;
+  margin-left: 25px;
+}
+
+.disableWin{
+  pointer-events: none;
+}
+
+
+.containerFooter{
+  background: #f0f0f0;
+  padding: 5px 10px 5px 30px;
+  align-items: center;
+  display: flex;
+}
+
+.containerFooter p{
+  margin-top: 10px;
+}
+
+.containerFooter img{
+  width: 20px;
+  margin-right: 10px
+}
+
+
