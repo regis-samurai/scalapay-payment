@@ -39,23 +39,18 @@ class ModalScalapay extends React.Component {
     bodyScalapay.merchant.redirectCancelUrl = config.redirectUrl
 
     //this.fillBody(urlRedirect, orderForm)
-    let responseSend = sendPayment(configScalapay.urlProxy, configScalapay.urlBase, bodyScalapay)
-    responseSend.then(response =>{
-      if(response.token){
-        this.setState({changeImgOne: check, changeImgTwo: numbertwoanimated})
-        setTimeout(()=>{ 
+    createOrder(bodyScalapay).then((response) => {
+      if (response.token) {
+        this.setState({ changeImgOne: check, changeImgTwo: numbertwoanimated })
+        setTimeout(() => {
           document.body.innerHTML += '<div className="backgroundModal"></div>'
-          const modalCheckout = window.open(response.checkoutUrl, '', 'toolbar=no,menubar=no,width=600,height=700')
-          window.addEventListener('message', function(e) {
-            // e.data hold the message from child
-            console.log(e.data); 
-          } , false);
-          console.log("antes de addEventListener ", modalCheckout)
-          window.addEventListener('load', ()=> {
-            console.log('------------------>>> Modal')
-          })
-          console.log("DESPUÉS de addEventListener ", modalCheckout)
-        }, 3000);
+          this.scalapayCheckout = window.open(
+            response.checkoutUrl,
+            '',
+            'toolbar=no,menubar=no,width=600,height=700'
+          )
+          console.log('DESPUÉS de addEventListener ', modalCheckout)
+        }, 3000)
       }
     })
   }
@@ -67,7 +62,11 @@ class ModalScalapay extends React.Component {
   handleMessages = (e) => {
     console.log('handleMessages: ', e)
 
-    if (e.data && e.data.source === 'scalapay-checkout' && e.data.event === 'payment-result') {
+    if (
+      e.data &&
+      e.data.source === 'scalapay-checkout' &&
+      e.data.event === 'payment-result'
+    ) {
       this.scalapayCheckout.close()
 
       // TODO: Iniciar loader
