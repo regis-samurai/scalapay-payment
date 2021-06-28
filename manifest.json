@@ -1,20 +1,19 @@
 {
-  "name": "scalapay-payment",
+  "name": "example-payment-auth-app",
   "vendor": "vtex",
   "version": "1.0.7",
   "title": "Scalapay modal payment",
   "description": "Modal to payment using scalapay",
   "defaultLocale": "en",
   "mustUpdateAt": "2019-01-08",
-  "dependencies": {
-    "vtex.styleguide": "9.x"
-  },
   "builders": {
     "react": "2.x",
     "pages": "0.x",
     "messages": "0.x",
-    "docs": "0.x"
+    "docs": "0.x",
+    "node": "4.x"
   },
+  "dependencies": {},
   "scripts": {
     "postreleasy": "vtex publish --public"
   },

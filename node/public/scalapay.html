@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Scalapay script</title>
+  </head>
+  <body>
+    <h1>Process status: <span id="scalapay-status"></span></h1>
+
+    <script>
+      function notifyResult(payload) {
+        window.opener.postMessage(
+          { source: 'scalapay-checkout', event: 'payment-result', payload },
+          '*'
+        )
+      }
+
+      function showResult(status) {
+        const element = document.getElementById('scalapay-status')
+        element.innerHTML = status
+      }
+
+      window.addEventListener(
+        'load',
+        () => {
+          const params = new URLSearchParams(window.location.search)
+          const status = params.get('status') || null
+          const orderToken = params.get('orderToken') || null
+
+          showResult(status)
+          notifyResult({
+            status,
+            orderToken,
+          })
+        },
+        false
+      )
+    </script>
+  </body>
+</html>
