@@ -5,6 +5,7 @@ import { config } from './config/configScalapay'
 import {
   hourglass,
   creditcard,
+  creditcarderror,
   interfacevtex,
   numberoneanimated,
   numbertwoanimated,
@@ -13,6 +14,7 @@ import {
   number3,
   check,
   info,
+  cancel
 } from './config/importsAssets'
 import { createOrder, captureOrder } from './services/connector'
 
@@ -24,6 +26,8 @@ class ModalScalapay extends React.Component {
     this.state = {
       changeImgOne: numberoneanimated,
       changeImgTwo: number2,
+      creditImg: creditcard,
+      messageStep2: 'Make the payment in the new Scalapay window'
     }
   }
 
@@ -42,15 +46,13 @@ class ModalScalapay extends React.Component {
     createOrder(bodyScalapay).then((response) => {
       if (response.token) {
         this.setState({ changeImgOne: check, changeImgTwo: numbertwoanimated })
-        setTimeout(() => {
-          document.body.innerHTML += '<div className="backgroundModal"></div>'
-          this.scalapayCheckout = window.open(
-            response.checkoutUrl,
-            '',
-            'toolbar=no,menubar=no,width=600,height=700'
-          )
-          console.log('DESPUÉS de addEventListener ', modalCheckout)
-        }, 3000)
+        document.body.innerHTML += '<div className="backgroundModal"></div>'
+        this.scalapayCheckout = window.open(
+          response.checkoutUrl,
+          '',
+          'toolbar=no,menubar=no,width=600,height=700'
+        )
+        console.log('DESPUÉS de addEventListener ', modalCheckout)
       }
     })
   }
@@ -72,11 +74,11 @@ class ModalScalapay extends React.Component {
       // TODO: Iniciar loader
       captureOrder(e.data.orderToken)
         .then((res) => {
-          console.log('captureOrder res: ', res)
           if (res.status === 'APPROVED') {
-            // TODO: Mostrar check paso 3
+            console.log("no fallo")
           } else {
-            // TODO: Mostrar icono fallido paso 3 e informar el error al usuario
+            console.log("falloo")
+            this.setState({creditImg: creditcarderror, messageStep2: 'The payment process has been failed. Please, try another payment method', changeImgTwo: cancel})
           }
         })
         .catch((err) => {
@@ -171,10 +173,11 @@ class ModalScalapay extends React.Component {
                 Wait while your payment is processing
               </p>
             </div>
+            {console.log("------- ",  this.state.creditImg, ' messsa ', this.state.messageStep2)}
             <div className={styles.containerInfo}>
-              <img src={creditcard} className={styles.imgInfo} alt="loading" />
+              <img src={this.state.creditImg} className={styles.imgInfo} alt="loading" />
               <p className={styles.textInfo}>
-                Make the payment in the new Scalapay window
+                {this.state.messageStep2}
               </p>
             </div>
             <div className={styles.containerInfo}>

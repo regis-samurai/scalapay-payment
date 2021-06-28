@@ -1,5 +1,7 @@
 import check from '../assets/img/check.png'
+import cancel from '../assets/img/cancel.png'
 import creditcard from '../assets/img/creditcard.png'
+import creditcarderror from '../assets/img/creditcarderror.png'
 import hourglass from '../assets/img/hourglass.png'
 import info from '../assets/img/info.png'
 import interfacevtex from '../assets/img/interfacevtex.png'
@@ -13,6 +15,7 @@ import numbertwoanimated from '../assets/img/numbertwoanimated.gif'
 export {
   hourglass,
   creditcard,
+  creditcarderror,
   interfacevtex,
   numberoneanimated,
   numbertwoanimated,
@@ -21,5 +24,6 @@ export {
   number2,
   number3,
   check,
+  cancel,
   info,
 }
