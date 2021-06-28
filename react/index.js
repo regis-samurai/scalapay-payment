@@ -5,6 +5,7 @@ import { config } from './config/configScalapay'
 import {
   hourglass,
   creditcard,
+  creditcarderror,
   interfacevtex,
   numberoneanimated,
   numbertwoanimated,
@@ -13,19 +14,19 @@ import {
   number3,
   check,
   info,
+  cancel,
 } from './config/importsAssets'
 import { createOrder, captureOrder } from './services/connector'
 
-class ModalScalapay extends React.Component {
-  scalapayCheckout = null
-
-  constructor(props) {
-    super(props)
-    this.state = {
-      changeImgOne: numberoneanimated,
-      changeImgTwo: number2,
-    }
+class ModalScalapay extends Component {
+  state = {
+    changeImgOne: numberoneanimated,
+    changeImgTwo: number2,
+    creditImg: creditcard,
+    messageStep2: 'Make the payment in the new Scalapay window',
   }
+  childWindow = null
+  intervalId = null
 
   componentDidMount() {
     $(window).trigger('removePaymentLoading.vtex')
@@ -44,41 +45,55 @@ class ModalScalapay extends React.Component {
         this.setState({ changeImgOne: check, changeImgTwo: numbertwoanimated })
         this.backdrop()
 
-        setTimeout(() => {
-          this.scalapayCheckout = window.open(
-            response.checkoutUrl,
-            '',
-            'menubar=0,location=0,centerscreen,toolbar=no,menubar=no,width=600,height=700'
-          )
-          console.log('DESPUÉS de addEventListener ', modalCheckout)
-        }, 3000)
+        this.childWindow = window.open(
+          response.checkoutUrl,
+          '',
+          'toolbar=no,menubar=no,width=600,height=700'
+        )
+
+        this.intervalId = setInterval(childWindowIsClosed.bind(this), 1000)
+
+        function childWindowIsClosed() {
+          if (this.childWindow?.closed) {
+            clearInterval(this.intervalId)
+            this.handleCloseChildWindow()
+          }
+        }
+        console.log(
+          'DESPUÉS de addEventListener ',
+          this.childWindow,
+          this.childWindow?.closed
+        )
       }
     })
   }
 
   componentWillUnmount() {
-    target.removeEventListener('click', this.handleMessages, false)
+    target.removeEventListener('message', this.handleMessages, false)
   }
 
   handleMessages = (e) => {
-    console.log('handleMessages: ', e)
-
     if (
       e.data &&
       e.data.source === 'scalapay-checkout' &&
       e.data.event === 'payment-result'
     ) {
-      this.scalapayCheckout.close()
+      this.childWindow.close()
       this.backdrop(false)
 
       // TODO: Iniciar loader
       captureOrder(e.data.orderToken)
         .then((res) => {
-          console.log('captureOrder res: ', res)
           if (res.status === 'APPROVED') {
-            // TODO: Mostrar check paso 3
+            console.log('no fallo')
           } else {
-            // TODO: Mostrar icono fallido paso 3 e informar el error al usuario
+            console.log('falloo')
+            this.setState({
+              creditImg: creditcarderror,
+              messageStep2:
+                'The payment process has been failed. Please, try another payment method',
+              changeImgTwo: cancel,
+            })
           }
         })
         .catch((err) => {
@@ -96,9 +111,22 @@ class ModalScalapay extends React.Component {
     $(window).trigger('transactionValidation.vtex', [status])
   }
 
+  handleCloseChildWindow = () => {
+    console.log('Se cierra el checkout')
+    this.backdrop(false)
+
+    // FIXME: Revisar esto
+    this.setState({
+      creditImg: creditcarderror,
+      messageStep2:
+        'The payment process has been failed. Please, try another payment method',
+      changeImgTwo: cancel,
+    })
+  }
+
   backdrop = (active = true) => {
-    const $div = $('#scalapay-background');
-    
+    const $div = $('#scalapay-background')
+
     if (active && !$div.length) {
       const el = document.createElement('div')
 
@@ -161,6 +189,8 @@ class ModalScalapay extends React.Component {
   }
 
   render() {
+    console.log('render: ', this.state)
+
     return (
       <div className={styles.wrapper}>
         <div id="newWindow" className=""></div>
@@ -197,11 +227,19 @@ class ModalScalapay extends React.Component {
                 Wait while your payment is processing
               </p>
             </div>
+            {console.log(
+              '------- ',
+              this.state.creditImg,
+              ' messsa ',
+              this.state.messageStep2
+            )}
             <div className={styles.containerInfo}>
-              <img src={creditcard} className={styles.imgInfo} alt="loading" />
-              <p className={styles.textInfo}>
-                Make the payment in the new Scalapay window
-              </p>
+              <img
+                src={this.state.creditImg}
+                className={styles.imgInfo}
+                alt="loading"
+              />
+              <p className={styles.textInfo}>{this.state.messageStep2}</p>
             </div>
             <div className={styles.containerInfo}>
               <img
