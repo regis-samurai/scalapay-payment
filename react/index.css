@@ -14,11 +14,8 @@
 }
 
 .titleHeader {
-  text-align: center;
-  font-size: 18px;
+  font-size: 21px;
   font-weight: 800;
-  margin-top: 15px;
-  margin-left: 20px;
 }
 
 .headerModal {
@@ -26,6 +23,8 @@
   align-items: center;
   padding: 15px;
   background: #f0f0f0;
+  display: flex;
+  justify-content: center;
 }
 
 .buttonCancel {
