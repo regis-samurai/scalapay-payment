@@ -5,16 +5,20 @@ import { config } from './config/configScalapay'
 import {
   hourglass,
   creditcard,
-  creditcarderror,
   interfacevtex,
+  interfaceblock,
   numberoneanimated,
   numbertwoanimated,
   numberthreeanimated,
   number2,
   number3,
-  check,
+  checksucess,
   info,
   cancel,
+  numberblock,
+  retry,
+  creditcarderror,
+  interfaceerror
 } from './config/importsAssets'
 import { createOrder, captureOrder } from './services/connector'
 
@@ -22,8 +26,16 @@ class ModalScalapay extends Component {
   state = {
     changeImgOne: numberoneanimated,
     changeImgTwo: number2,
+    changeImgThree: number3,
     creditImg: creditcard,
     messageStep2: 'Make the payment in the new Scalapay window',
+    messageStep3: 'You will be returning to the store. Verify the payment',
+    statusfailed: false,
+    colorFont: "black",
+    colorBlock: "black",
+    changeImgInterface: interfacevtex,
+    statusFailed2: false,
+    statusFailed3: false
   }
   childWindow = null
   intervalId = null
@@ -33,22 +45,19 @@ class ModalScalapay extends Component {
     window.addEventListener('message', this.handleMessages, false)
 
     const orderForm = vtexjs.checkout.orderForm
-    console.log('----> ', orderForm)
     // const urlRedirect = configScalapay.redirectConfirmUrl + orderForm.orderGroup
 
-    bodyScalapay.merchant.redirectConfirmUrl = config.redirectUrl
-    bodyScalapay.merchant.redirectCancelUrl = config.redirectUrl
+    bodyScalapay.merchant.redirectConfirmUrl = config.redirectUrl()
+    bodyScalapay.merchant.redirectCancelUrl = config.redirectUrl()
 
     //this.fillBody(urlRedirect, orderForm)
     createOrder(bodyScalapay).then((response) => {
       if (response.token) {
-        this.setState({ changeImgOne: check, changeImgTwo: numbertwoanimated })
-        this.backdrop()
+        this.setState({ changeImgOne: checksucess, changeImgTwo: numbertwoanimated })
 
         this.childWindow = window.open(
           response.checkoutUrl,
-          '',
-          'toolbar=no,menubar=no,width=600,height=700'
+          '_blank'
         )
 
         this.intervalId = setInterval(childWindowIsClosed.bind(this), 1000)
@@ -59,11 +68,6 @@ class ModalScalapay extends Component {
             this.handleCloseChildWindow()
           }
         }
-        console.log(
-          'DESPUÉS de addEventListener ',
-          this.childWindow,
-          this.childWindow?.closed
-        )
       }
     })
   }
@@ -78,21 +82,31 @@ class ModalScalapay extends Component {
       e.data.source === 'scalapay-checkout' &&
       e.data.event === 'payment-result'
     ) {
+      const payload = e.data.payload
       this.childWindow.close()
-      this.backdrop(false)
-
-      // TODO: Iniciar loader
-      captureOrder(e.data.orderToken)
+      console.log("----------->>> ", e)
+      if (payload.status === 'SUCCESS'){
+        this.setState({
+          changeImgTwo: checksucess,
+          changeImgThree: numberthreeanimated,
+        })
+        captureOrder(payload.orderToken)
         .then((res) => {
           if (res.status === 'APPROVED') {
-            console.log('no fallo')
-          } else {
-            console.log('falloo')
             this.setState({
-              creditImg: creditcarderror,
-              messageStep2:
+              changeImgThree: checksucess,
+            })
+            //go to orderplace
+            this.respondTransaction(true)
+          } else {
+            //failed del paso 3
+            this.setState({
+              messageStep3:
                 'The payment process has been failed. Please, try another payment method',
-              changeImgTwo: cancel,
+              changeImgThree: cancel,
+              colorBlock: "#DD4B39",
+              changeImgInterface: interfaceerror,
+              statusFailed3: true
             })
           }
         })
@@ -103,6 +117,20 @@ class ModalScalapay extends Component {
         .finally(() => {
           // TODO: Parar loader
         })
+      }else{
+        this.setState({
+          creditImg: creditcarderror,
+          messageStep2:
+            'The payment process has been failed. Please, try another payment method',
+          changeImgTwo: cancel,
+          colorFont: "#DD4B39",
+          colorBlock: "#c6c6c6",
+          changeImgInterface: interfaceblock,
+          changeImgThree: numberblock,
+          statusFailed2: true,
+          statusFailed3: true
+        })
+      }
     }
   }
 
@@ -112,40 +140,8 @@ class ModalScalapay extends Component {
   }
 
   handleCloseChildWindow = () => {
-    console.log('Se cierra el checkout')
-    this.backdrop(false)
-
-    // FIXME: Revisar esto
-    this.setState({
-      creditImg: creditcarderror,
-      messageStep2:
-        'The payment process has been failed. Please, try another payment method',
-      changeImgTwo: cancel,
-    })
-  }
-
-  backdrop = (active = true) => {
-    const $div = $('#scalapay-background')
-
-    if (active && !$div.length) {
-      const el = document.createElement('div')
-
-      $(el)
-        .attr('id', 'scalapay-background')
-        .css({
-          'background-color': 'rgba(0,0,0,0.9)',
-          position: 'absolute',
-          width: '100%',
-          height: '100vh',
-          top: 0,
-          'z-index': '1000',
-        })
-        .appendTo($('body'))
-    }
-
-    if (!active && $div.length) {
-      $div.remove()
-    }
+    //this.setState({statusfailed: true})
+    console.log('Se cierra el checkout ', this.state.statusfailed)
   }
 
   fillBody = (url, order) => {
@@ -189,8 +185,6 @@ class ModalScalapay extends Component {
   }
 
   render() {
-    console.log('render: ', this.state)
-
     return (
       <div className={styles.wrapper}>
         <div id="newWindow" className=""></div>
@@ -205,7 +199,7 @@ class ModalScalapay extends Component {
                 className={styles.imgLoading}
                 alt="one"
               />
-              <div className={styles.verticalLine}></div>
+              <div className={styles.verticalLine} style={{borderColor: this.state.statusFailed2 ? "#DD4B39" : "#f9aac8"}}></div>
             </div>
             <div>
               <img
@@ -213,10 +207,10 @@ class ModalScalapay extends Component {
                 className={styles.imgLoading}
                 alt="two"
               />
-              <div className={styles.verticalLine}></div>
+              <div className={styles.verticalLine} style={{borderColor: this.state.statusFailed3 ? "#c6c6c6" : "#f9aac8"}}></div>
             </div>
             <div>
-              <img src={number3} className={styles.imgLoading} alt="three" />
+              <img src={this.state.changeImgThree} className={styles.imgLoading} alt="three" />
             </div>
           </div>
 
@@ -227,28 +221,26 @@ class ModalScalapay extends Component {
                 Wait while your payment is processing
               </p>
             </div>
-            {console.log(
-              '------- ',
-              this.state.creditImg,
-              ' messsa ',
-              this.state.messageStep2
-            )}
             <div className={styles.containerInfo}>
               <img
                 src={this.state.creditImg}
                 className={styles.imgInfo}
                 alt="loading"
               />
-              <p className={styles.textInfo}>{this.state.messageStep2}</p>
+              <p className={styles.textInfo} style={{color:this.state.colorFont}}>{this.state.messageStep2}</p>
+              {this.state.statusfailed ? <div>
+                <img src={retry} alt="retry"/>
+                <p>Try the payment process again</p>
+              </div> : <div />}
             </div>
             <div className={styles.containerInfo}>
               <img
-                src={interfacevtex}
+                src={this.state.changeImgInterface}
                 className={styles.imgInfo}
                 alt="loading"
               />
-              <p className={styles.textInfo}>
-                You will be returning to the store. Verify the payment
+              <p className={styles.textInfo} style={{color:this.state.colorBlock}}>
+                {this.state.messageStep3}
               </p>
             </div>
           </div>
