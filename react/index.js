@@ -40,7 +40,10 @@ class ModalScalapay extends Component {
   }
   childWindow = null
   intervalId = null
-  checkoutUrl = null
+  checkoutUrl = {
+    value: null,
+    expires: null,
+  }
 
   componentDidMount() {
     const orderForm = vtexjs.checkout.orderForm
@@ -52,28 +55,39 @@ class ModalScalapay extends Component {
     bodyScalapay.merchant.redirectCancelUrl = config.redirectUrl()
 
     // this.fillBody(urlRedirect, orderForm)
-    createOrder(bodyScalapay).then((response) => {
-      if (response.token) {
-        this.setState({
-          changeImgOne: checksucess,
-          changeImgTwo: numbertwoanimated,
-        })
-        this.checkoutUrl = response.checkoutUrl
-        this.createChildWindow()
-      }
-    })
+    this.getCheckoutUrl()
   }
 
   componentWillUnmount() {
     target.removeEventListener('message', this.handleMessages, false)
   }
 
+  getCheckoutUrl = () => {
+    createOrder(bodyScalapay).then((response) => {
+      const { token, checkoutUrl, expires } = response
+
+      if (token) {
+        this.setState({
+          changeImgOne: checksucess,
+          changeImgTwo: numbertwoanimated,
+        })
+        this.checkoutUrl = {
+          value: checkoutUrl,
+          expires,
+        }
+        this.createChildWindow()
+      }
+    })
+  }
+
   createChildWindow = () => {
+    console.log('checkoutUrl: ', this.checkoutUrl)
+
     if (this.intervalId) {
       clearInterval(this.intervalId)
     }
 
-    this.childWindow = window.open(this.checkoutUrl, '_blank')
+    this.childWindow = window.open(this.checkoutUrl.value, '_blank')
     this.intervalId = setInterval(childWindowIsClosed.bind(this), 1000)
 
     function childWindowIsClosed() {
@@ -133,8 +147,8 @@ class ModalScalapay extends Component {
           messageStep2:
             'The payment process has been failed. Please, try another payment method',
           changeImgTwo: cancel,
-          colorFont: "#DD4B39",
-          colorBlock: "#c6c6c6",
+          colorFont: '#DD4B39',
+          colorBlock: '#c6c6c6',
           changeImgInterface: interfaceblock,
           changeImgThree: numberblock,
           statusFailed2: true,
@@ -150,6 +164,9 @@ class ModalScalapay extends Component {
   }
 
   retryPayment = () => {
+    const checkoutUrlExpiresDate = new Date(this.checkoutUrl.expires).getTime()
+    const currentDate = new Date().getTime()
+
     console.log('retryPayment...')
 
     this.setState({
@@ -165,7 +182,12 @@ class ModalScalapay extends Component {
       statusFailed3: null,
       childWindowClosedUnexpectedly: false,
     })
-    this.createChildWindow()
+
+    if (currentDate <= checkoutUrlExpiresDate) {
+      this.createChildWindow()
+    } else {
+      this.getCheckoutUrl()
+    }
   }
 
   handleCloseChildWindow = () => {
