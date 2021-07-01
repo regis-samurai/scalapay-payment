@@ -36,6 +36,7 @@ class ModalScalapay extends Component {
     statusFailed: null, // null | true | false
     statusFailed2: null, // null | true | false
     statusFailed3: null, // null | true | false,
+    showReload: false,
     childWindowClosedUnexpectedly: false,
   }
   childWindow = null
@@ -89,6 +90,7 @@ class ModalScalapay extends Component {
 
     this.childWindow = window.open(this.checkoutUrl.value, '_blank')
     this.intervalId = setInterval(childWindowIsClosed.bind(this), 1000)
+    this.backdrop()
 
     function childWindowIsClosed() {
       if (this.childWindow?.closed) {
@@ -106,7 +108,6 @@ class ModalScalapay extends Component {
     ) {
       const payload = e.data.payload
       this.childWindow.close()
-      console.log('----------->>> ', e)
 
       if (payload.status === 'SUCCESS') {
         this.setState({
@@ -131,6 +132,7 @@ class ModalScalapay extends Component {
                 colorBlock: '#DD4B39',
                 changeImgInterface: interfaceerror,
                 statusFailed3: true,
+                showReload: true
               })
             }
           })
@@ -153,6 +155,7 @@ class ModalScalapay extends Component {
           changeImgThree: numberblock,
           statusFailed2: true,
           statusFailed3: true,
+          showReload: true
         })
       }
     }
@@ -163,16 +166,38 @@ class ModalScalapay extends Component {
     $(window).trigger('transactionValidation.vtex', [status])
   }
 
+  backdrop = (active = true) => {
+    const $div = $('#scalapay-background');
+    
+    if (active && !$div.length) {
+      const el = document.createElement('div')
+
+      $(el)
+        .attr('id', 'scalapay-background')
+        .css({
+          'background-color': 'rgba(0,0,0,0.9)',
+          position: 'absolute',
+          width: '100%',
+          height: '100vh',
+          top: 0,
+          'z-index': '1000',
+        })
+        .appendTo($('body'))
+    }
+
+    if (!active && $div.length) {
+      $div.remove()
+    }
+  }
+
   retryPayment = () => {
     const checkoutUrlExpiresDate = new Date(this.checkoutUrl.expires).getTime()
     const currentDate = new Date().getTime()
 
-    console.log('retryPayment...')
-
     this.setState({
       creditImg: creditcard,
       messageStep2:
-        'The payment process has been failed. Please, try another payment method',
+        'Make the payment in the new Scalapay window',
       changeImgTwo: numbertwoanimated,
       colorFont: 'black',
       colorBlock: 'black',
@@ -180,7 +205,7 @@ class ModalScalapay extends Component {
       changeImgThree: number3,
       statusFailed2: null,
       statusFailed3: null,
-      childWindowClosedUnexpectedly: false,
+      childWindowClosedUnexpectedly: false
     })
 
     if (currentDate <= checkoutUrlExpiresDate) {
@@ -193,7 +218,6 @@ class ModalScalapay extends Component {
   handleCloseChildWindow = () => {
     // If statusFailed2 is null step two is not finished
     if (this.state.statusFailed2 === null) {
-      console.log('USUARIO CIERRA CHECKOUT SCALAPAY')
 
       this.setState({
         creditImg: creditcarderror,
@@ -316,13 +340,17 @@ class ModalScalapay extends Component {
                 className={styles.textInfo}
                 style={{ color: this.state.colorFont }}>
                 {this.state.messageStep2}
-              </p>
-              {this.state.childWindowClosedUnexpectedly && (
-                <div onClick={() => this.retryPayment()}>
+                {this.state.childWindowClosedUnexpectedly && (
+                <div onClick={() => this.retryPayment()} className={styles.retry}>
                   <img src={retry} alt="retry" />
-                  <p>Try the payment process again</p>
+                  <p>Click to try the payment process again</p>
                 </div>
               )}
+              {this.state.showReload && ( <div className={styles.retry}>
+                <p>Close this window <a href="#" className={styles.hiperlink} onClick={() => document.location.reload(true)}>here</a></p>
+              </div>)
+              }
+              </p>
             </div>
 
             {/* Step 3 */}

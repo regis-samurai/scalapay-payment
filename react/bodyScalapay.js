@@ -75,5 +75,5 @@ export const bodyScalapay = {
     amount: '10.00',
     currency: 'EUR',
   },
-  orderExpiryMilliseconds: 6000000,
+  orderExpiryMilliseconds: 60000,
 }
