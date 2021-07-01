@@ -1,5 +1,4 @@
 import React, { Component } from 'react'
-import { bodyScalapay } from './bodyScalapay'
 import { config } from './config/configScalapay'
 import {
   cancel,
@@ -46,16 +45,12 @@ class ModalScalapay extends Component {
     expires: null,
   }
 
+  
   componentDidMount() {
-    const orderForm = vtexjs.checkout.orderForm
-
+    console.log('this.props: ', this.props);
     $(window).trigger('removePaymentLoading.vtex')
     window.addEventListener('message', this.handleMessages, false)
 
-    bodyScalapay.merchant.redirectConfirmUrl = config.redirectUrl()
-    bodyScalapay.merchant.redirectCancelUrl = config.redirectUrl()
-
-    // this.fillBody(urlRedirect, orderForm)
     this.backdrop()
     this.getCheckoutUrl()
   }
@@ -65,7 +60,11 @@ class ModalScalapay extends Component {
   }
 
   getCheckoutUrl = () => {
-    createOrder(bodyScalapay).then((response) => {
+    const body = this.getBody()
+
+    console.log('Body: ', body)
+
+    createOrder(body).then((response) => {
       const { token, checkoutUrl, expires } = response
 
       if (token) {
@@ -132,12 +131,12 @@ class ModalScalapay extends Component {
                 colorBlock: '#DD4B39',
                 changeImgInterface: interfaceerror,
                 statusFailed3: true,
-                showReload: true
+                showReload: true,
               })
             }
           })
           .catch((err) => {
-            // TODO: Informar al usuario
+            // TODO: Informar al usuario, intentar 3 veces y sino funciona cancelar pago 
             console.log('captureOrder err: ', err)
           })
           .finally(() => {
@@ -155,7 +154,7 @@ class ModalScalapay extends Component {
           changeImgThree: numberblock,
           statusFailed2: true,
           statusFailed3: true,
-          showReload: true
+          showReload: true,
         })
       }
     }
@@ -167,8 +166,8 @@ class ModalScalapay extends Component {
   }
 
   backdrop = (active = true) => {
-    const $div = $('#scalapay-background');
-    
+    const $div = $('#scalapay-background')
+
     if (active && !$div.length) {
       const el = document.createElement('div')
 
@@ -196,8 +195,7 @@ class ModalScalapay extends Component {
 
     this.setState({
       creditImg: creditcard,
-      messageStep2:
-        'Make the payment in the new Scalapay window',
+      messageStep2: 'Make the payment in the new Scalapay window',
       changeImgTwo: numbertwoanimated,
       colorFont: 'black',
       colorBlock: 'black',
@@ -205,7 +203,7 @@ class ModalScalapay extends Component {
       changeImgThree: number3,
       statusFailed2: null,
       statusFailed3: null,
-      childWindowClosedUnexpectedly: false
+      childWindowClosedUnexpectedly: false,
     })
 
     if (currentDate <= checkoutUrlExpiresDate) {
@@ -218,7 +216,6 @@ class ModalScalapay extends Component {
   handleCloseChildWindow = () => {
     // If statusFailed2 is null step two is not finished
     if (this.state.statusFailed2 === null) {
-
       this.setState({
         creditImg: creditcarderror,
         messageStep2: 'Scalapay payment window closed unexpectedly.',
@@ -234,44 +231,84 @@ class ModalScalapay extends Component {
     }
   }
 
-  fillBody = (url, order) => {
-    bodyScalapay.merchant.redirectConfirmUrl = url
-    bodyScalapay.merchant.redirectCancelUrl = config.redirectCancelUrl
+  getBody = () => {
+    const body = {}
+    const orderForm = vtexjs.checkout.orderForm
+    const countryCode = orderForm.shippingData.address.country.slice(0, 2)
+    // FIXME: const currency = orderForm.storePreferencesData.currencyCode
+    const currency = 'EUR'
 
-    bodyScalapay.consumer.email = order.clientProfileData.email
-    bodyScalapay.consumer.givenNames = order.clientProfileData.firstName
-    bodyScalapay.consumer.surname = order.clientProfileData.lastName
-    bodyScalapay.consumer.phoneNumber = order.clientProfileData.phone
-    bodyScalapay.shipping.name = order.shippingData.address.receiverName
-    bodyScalapay.shipping.line1 = order.shippingData.address.street
-    bodyScalapay.shipping.suburb = order.shippingData.address.city
-    bodyScalapay.shipping.postcode = order.shippingData.address.postalCode
-    bodyScalapay.shipping.countryCode = order.shippingData.address.country
+    const getCategories = (item) => {
+      const productCategoryIds = item.productCategoryIds
+        .split('/')
+        .filter((x) => x)
+      const subcategories = item.productCategories
 
-    let amount = 0
-    order.totalizers.forEach((total) => {
-      amount += total.value
-    })
+      delete subcategories[productCategoryIds[0]]
 
-    bodyScalapay.totalAmount.amount = amount.toString().slice(1, -1)
-    bodyScalapay.totalAmount.currency = order.storePreferencesData.currencyCode
-    bodyScalapay.merchantReference = order.orderGroup
+      return {
+        main: item.productCategories[productCategoryIds[0]],
+        others: Object.values(subcategories),
+      }
+    }
 
-    order.items.forEach((items) => {
-      bodyScalapay.items.push({
-        name: items.name,
-        category: '',
-        subcategory: [''],
-        brand: 'TopChoice',
-        gtin: '123458791330',
-        sku: '12341234',
-        quantity: items.quantity,
+    body.merchantReference = orderForm.orderGroup
+    body.orderExpiryMilliseconds = 3600000 // 1 hour
+
+    body.merchant = {
+      redirectConfirmUrl: config.redirectUrl(),
+      redirectCancelUrl: config.redirectUrl(),
+    }
+
+    body.totalAmount = {
+      amount: String(orderForm.value),
+      currency,
+    }
+
+    body.consumer = {
+      phoneNumber: orderForm.clientProfileData.phone,
+      givenNames: orderForm.clientProfileData.firstName,
+      surname: orderForm.clientProfileData.lastName,
+      email: orderForm.clientProfileData.email,
+    }
+
+    body.shipping = {
+      name: orderForm.shippingData.address.receiverName,
+      line1: orderForm.shippingData.address.street,
+      suburb: orderForm.shippingData.address.city,
+      postcode: orderForm.shippingData.address.postalCode,
+      countryCode,
+      phoneNumber: orderForm.clientProfileData.phone,
+    }
+
+    body.items = orderForm.items.map((item) => {
+      const productCategoryIds = item.productCategoryIds
+        .split('/')
+        .filter((x) => x)
+      const subcategories = item.productCategories
+
+      delete subcategories[productCategoryIds[0]]
+
+      const category =
+        item.productCategories[productCategoryIds[0]] || 'default'
+      const subcategory = Object.values(subcategories)
+
+      return {
+        name: item.name,
+        category,
+        subcategory: subcategory.length ? subcategory : ['default'],
+        brand: item.additionalInfo.brandName,
+        gtin: String(item.ean | item.refId | item.id),
+        sku: item.id,
+        quantity: item.quantity,
         price: {
-          amount: items.price.toString().slice(1, -1),
-          currency: order.storePreferencesData.currencyCode,
+          amount: String(item.price),
+          currency,
         },
-      })
+      }
     })
+
+    return body
   }
 
   render() {
@@ -341,15 +378,26 @@ class ModalScalapay extends Component {
                 style={{ color: this.state.colorFont }}>
                 {this.state.messageStep2}
                 {this.state.childWindowClosedUnexpectedly && (
-                <div onClick={() => this.retryPayment()} className={styles.retry}>
-                  <img src={retry} alt="retry" />
-                  <p>Click to try the payment process again</p>
-                </div>
-              )}
-              {this.state.showReload && ( <div className={styles.retry}>
-                <p>Close this window <a href="#" className={styles.hiperlink} onClick={() => document.location.reload(true)}>here</a></p>
-              </div>)
-              }
+                  <div
+                    onClick={() => this.retryPayment()}
+                    className={styles.retry}>
+                    <img src={retry} alt="retry" />
+                    <p>Click to try the payment process again</p>
+                  </div>
+                )}
+                {this.state.showReload && (
+                  <div className={styles.retry}>
+                    <p>
+                      Close this window{' '}
+                      <a
+                        href="#"
+                        className={styles.hiperlink}
+                        onClick={() => document.location.reload(true)}>
+                        here
+                      </a>
+                    </p>
+                  </div>
+                )}
               </p>
             </div>
 
