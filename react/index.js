@@ -56,6 +56,7 @@ class ModalScalapay extends Component {
     bodyScalapay.merchant.redirectCancelUrl = config.redirectUrl()
 
     // this.fillBody(urlRedirect, orderForm)
+    this.backdrop()
     this.getCheckoutUrl()
   }
 
@@ -90,7 +91,6 @@ class ModalScalapay extends Component {
 
     this.childWindow = window.open(this.checkoutUrl.value, '_blank')
     this.intervalId = setInterval(childWindowIsClosed.bind(this), 1000)
-    this.backdrop()
 
     function childWindowIsClosed() {
       if (this.childWindow?.closed) {
@@ -175,12 +175,12 @@ class ModalScalapay extends Component {
       $(el)
         .attr('id', 'scalapay-background')
         .css({
-          'background-color': 'rgba(0,0,0,0.9)',
-          position: 'absolute',
+          'background-color': 'rgba(0,0,0,0.8)',
+          position: 'fixed',
           width: '100%',
           height: '100vh',
           top: 0,
-          'z-index': '1000',
+          'z-index': '100',
         })
         .appendTo($('body'))
     }
