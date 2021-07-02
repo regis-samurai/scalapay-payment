@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import { intlShape, injectIntl } from 'react-intl'
 import { bodyScalapay } from './bodyScalapay'
 import { config } from './config/configScalapay'
 import {
@@ -22,6 +23,13 @@ import {
 import styles from './index.css'
 import { captureOrder, createOrder } from './services/connector'
 
+/*const messages = defineMessages({
+  step2: {
+    id: 'scalapay.step.step2',
+    defaultMessage: '',
+  }
+})*/
+
 class ModalScalapay extends Component {
   state = {
     changeImgOne: numberoneanimated,
@@ -29,8 +37,8 @@ class ModalScalapay extends Component {
     changeImgThree: number3,
     changeImgInterface: interfacevtex,
     creditImg: creditcard,
-    messageStep2: 'Make the payment in the new Scalapay window',
-    messageStep3: 'You will be returning to the store. Verify the payment',
+    messageStep2: 'scalapay.step.step2',
+    messageStep3: 'scalapay.step.step3',
     colorFont: 'black',
     colorBlock: 'black',
     statusFailed: null, // null | true | false
@@ -48,7 +56,7 @@ class ModalScalapay extends Component {
 
   componentDidMount() {
     const orderForm = vtexjs.checkout.orderForm
-
+    console.log("")
     $(window).trigger('removePaymentLoading.vtex')
     window.addEventListener('message', this.handleMessages, false)
 
@@ -126,8 +134,7 @@ class ModalScalapay extends Component {
             } else {
               //failed del paso 3
               this.setState({
-                messageStep3:
-                  'The payment process has been failed. Please, try another payment method',
+                messageStep3: 'scalapay.process.failedPayment',
                 changeImgThree: cancel,
                 colorBlock: '#DD4B39',
                 changeImgInterface: interfaceerror,
@@ -146,8 +153,7 @@ class ModalScalapay extends Component {
       } else {
         this.setState({
           creditImg: creditcarderror,
-          messageStep2:
-            'The payment process has been failed. Please, try another payment method',
+          messageStep2: 'scalapay.process.failedPayment',
           changeImgTwo: cancel,
           colorFont: '#DD4B39',
           colorBlock: '#c6c6c6',
@@ -196,8 +202,7 @@ class ModalScalapay extends Component {
 
     this.setState({
       creditImg: creditcard,
-      messageStep2:
-        'Make the payment in the new Scalapay window',
+      messageStep2: 'scalapay.step.step2',
       changeImgTwo: numbertwoanimated,
       colorFont: 'black',
       colorBlock: 'black',
@@ -221,7 +226,7 @@ class ModalScalapay extends Component {
 
       this.setState({
         creditImg: creditcarderror,
-        messageStep2: 'Scalapay payment window closed unexpectedly.',
+        messageStep2: 'scalapay.process.closeWindow',
         changeImgTwo: cancel,
         colorFont: '#DD4B39',
         colorBlock: '#c6c6c6',
@@ -275,10 +280,18 @@ class ModalScalapay extends Component {
   }
 
   render() {
+    console.log(this.props)
+    const { intl } = this.props
     return (
       <div className={styles.wrapper}>
         <div className={styles.headerModal}>
-          <h2 className={styles.titleHeader}>Scalapay payment process</h2>
+          <h2 className={styles.titleHeader}>
+            {
+              intl.formatMessage({
+                id: 'scalapay.title.head',
+              })
+            }
+          </h2>
         </div>
         <div className={styles.row}>
           <div className={styles.column} id={styles.column1}>
@@ -325,7 +338,11 @@ class ModalScalapay extends Component {
             <div className={styles.containerInfo}>
               <img src={hourglass} className={styles.imgInfo} alt="loading" />
               <p className={styles.textInfo}>
-                Wait while your payment is processing
+                {
+                  intl.formatMessage({
+                    id: 'scalapay.step.step1',
+                  })
+                }
               </p>
             </div>
 
@@ -339,11 +356,21 @@ class ModalScalapay extends Component {
               <p
                 className={styles.textInfo}
                 style={{ color: this.state.colorFont }}>
-                {this.state.messageStep2}
+                {
+                  intl.formatMessage({
+                    id: this.state.messageStep2,
+                  })
+                }
                 {this.state.childWindowClosedUnexpectedly && (
                 <div onClick={() => this.retryPayment()} className={styles.retry}>
                   <img src={retry} alt="retry" />
-                  <p>Click to try the payment process again</p>
+                  <p>
+                    {
+                      intl.formatMessage({
+                        id: 'scalapay.process.retry',
+                      })
+                    }
+                  </p>
                 </div>
               )}
               {this.state.showReload && ( <div className={styles.retry}>
@@ -363,7 +390,11 @@ class ModalScalapay extends Component {
               <p
                 className={styles.textInfo}
                 style={{ color: this.state.colorBlock }}>
-                {this.state.messageStep3}
+                {
+                  intl.formatMessage({
+                    id: this.state.messageStep3,
+                  })
+                }
               </p>
             </div>
           </div>
@@ -371,9 +402,18 @@ class ModalScalapay extends Component {
         <div className={styles.containerFooter}>
           <img src={info} alt="info" />
           <p>
-            Enable the pop-up to done the payment, for more information clic{' '}
-            <a href="https://support.google.com/chrome/answer/95472?co=GENIE.Platform%3DDesktop&hl=en">
-              here
+            {
+              intl.formatMessage({
+                id: 'scalapay.info.popup',
+              })
+            }
+            {' '}
+            <a href="https://support.google.com/chrome/answer/95472?co=GENIE.Platform%3DDesktop&hl=en" target="_blank">
+              {
+                intl.formatMessage({
+                  id: 'scalapay.info.clic',
+                })
+              }
             </a>
           </p>
         </div>
@@ -382,4 +422,8 @@ class ModalScalapay extends Component {
   }
 }
 
-export default ModalScalapay
+ModalScalapay.propTypes = {
+  intl: intlShape.isRequired
+}
+
+export default injectIntl(ModalScalapay)
