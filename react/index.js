@@ -1,6 +1,5 @@
 import React, { Component } from 'react'
 import { intlShape, injectIntl } from 'react-intl'
-import { bodyScalapay } from './bodyScalapay'
 import { config } from './config/configScalapay'
 import {
   cancel,
@@ -21,7 +20,7 @@ import {
   retry,
 } from './config/importsAssets'
 import styles from './index.css'
-import { captureOrder, createOrder } from './services/connector'
+import { captureOrder, createOrder, simulatePayments } from './services/connector'
 
 /*const messages = defineMessages({
   step2: {
@@ -69,25 +68,28 @@ class ModalScalapay extends Component {
     target.removeEventListener('message', this.handleMessages, false)
   }
 
+
   getCheckoutUrl = () => {
-    const body = this.getBody()
+    
+    simulatePayments().then(res =>{
+      const body = this.getBody()
+      createOrder(body, res.paymentId).then((response) => {
 
-    console.log('Body: ', body)
-
-    createOrder(body).then((response) => {
-      const { token, checkoutUrl, expires } = response
-
-      if (token) {
-        this.setState({
-          changeImgOne: checksucess,
-          changeImgTwo: numbertwoanimated,
-        })
-        this.checkoutUrl = {
-          value: checkoutUrl,
-          expires,
+        console.log("RESPONSEEEE ", response)
+        const { responseData } = response
+        const {checkoutUrl, token, expiresDate} = JSON.parse(responseData.content)
+        if (token) {
+          this.setState({
+            changeImgOne: checksucess,
+            changeImgTwo: numbertwoanimated,
+          })
+          this.checkoutUrl = {
+            value: checkoutUrl,
+            expires: expiresDate,
+          }
+          this.createChildWindow()
         }
-        this.createChildWindow()
-      }
+      })
     })
   }
 
@@ -243,22 +245,7 @@ class ModalScalapay extends Component {
     const body = {}
     const orderForm = vtexjs.checkout.orderForm
     const countryCode = orderForm.shippingData.address.country.slice(0, 2)
-    // FIXME: const currency = orderForm.storePreferencesData.currencyCode
     const currency = 'EUR'
-
-    const getCategories = (item) => {
-      const productCategoryIds = item.productCategoryIds
-        .split('/')
-        .filter((x) => x)
-      const subcategories = item.productCategories
-
-      delete subcategories[productCategoryIds[0]]
-
-      return {
-        main: item.productCategories[productCategoryIds[0]],
-        others: Object.values(subcategories),
-      }
-    }
 
     body.merchantReference = orderForm.orderGroup
     body.orderExpiryMilliseconds = 3600000 // 1 hour

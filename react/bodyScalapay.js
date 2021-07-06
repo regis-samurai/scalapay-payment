@@ -1,79 +1,81 @@
 export const bodyScalapay = {
-  totalAmount: {
-    amount: '100.00',
-    currency: 'EUR',
-  },
-  consumer: {
-    phoneNumber: '0400000001',
-    givenNames: 'Johnny',
-    surname: 'Mitrevski',
-    email: 'test@scalapay.com',
-  },
-  billing: {
-    name: 'Joe Consumer',
-    line1: 'Via della Rosa, 58',
-    suburb: 'Montelupo Fiorentino',
-    postcode: '50056',
-    countryCode: 'IT',
-    phoneNumber: '0400000000',
-  },
-  shipping: {
-    name: 'Joe Consumer',
-    line1: 'Via della Rosa, 58',
-    suburb: 'Montelupo Fiorentino',
-    postcode: '50056',
-    countryCode: 'IT',
-    phoneNumber: '0400000000',
-  },
-  items: [
-    {
-      name: '32',
-      category: 'clothes',
-      subcategory: ['shirt', 'long-sleeve'],
-      brand: 'TopChoice',
-      gtin: '123458791330',
-      sku: '12341234',
-      quantity: 1,
-      price: {
-        amount: '10.00',
-        currency: 'EUR',
-      },
-    },
-    {
-      name: 'Jeans',
-      category: 'clothes',
-      subcategory: ['pants', 'jeans'],
-      brand: 'TopChoice',
-      gtin: '123458722222',
-      sku: '12341235',
-      quantity: 1,
-      price: {
-        amount: '20.00',
-        currency: 'EUR',
-      },
-    },
-  ],
-  discounts: [
-    {
-      displayName: '10% Off',
-      amount: {
-        amount: '103.00',
-        currency: 'EUR',
-      },
-    },
-  ],
-  merchant: {
-    redirectConfirmUrl: 'https://scalapay.com',
-    redirectCancelUrl: 'https://scalapay.com',
-  },
-  merchantReference: 'merchantOrder-1234',
-  taxAmount: {
-    amount: '3.70',
-    currency: 'EUR',
-  },
-  shippingAmount: {
-    amount: '10.00',
-    currency: 'EUR',
-  },
-  orderExpiryMilliseconds: 60000,
+	"reference": "500128",
+	"orderId": "1084452709001",
+	"shopperInteraction": "ecommerce",
+	"transactionId": "7EA2B84046B24D3F9D80DEFDD2E82935",
+	"paymentId": "03902386FB55445EAE69E7FE0203FCC7_1",
+	"paymentMethod": "Scalapay",
+	"merchantName": "vtexeurope",
+	"card": {
+		"holder": null,
+		"number": null,
+		"csc": null,
+		"expiration": {
+			"month": null,
+			"year": null
+		},
+		"document": null,
+		"token": null
+	},
+	"value": 1000.0,
+	"currency": "EUR",
+	"installments": 1,
+	"installmentsInterestRate": 0.0,
+	"installmentsValue": 1000.0,
+	"deviceFingerprint": null,
+	"ipAddress": "186.114.166.188",
+	"miniCart": {
+		"buyer": {
+			"id": "074e4c99-e803-4d7b-a37a-ec388becf581",
+			"firstName": "camilo",
+			"lastName": "camargo",
+			"document": "1082981543",
+			"documentType": "C.C",
+			"corporateName": null,
+			"tradeName": null,
+			"corporateDocument": null,
+			"isCorporate": false,
+			"email": "camilo.camargo@vtex.com.br",
+			"phone": "+573005542927",
+			"createdDate": null
+		},
+		"shippingAddress": {
+			"country": "COL",
+			"street": "Calle 123",
+			"number": null,
+			"complement": null,
+			"neighborhood": null,
+			"postalCode": "08001",
+			"city": "Barranquilla",
+			"state": "ATLÁNTICO"
+		},
+		"billingAddress": {
+			"country": "COL",
+			"street": "Calle 123",
+			"number": null,
+			"complement": null,
+			"neighborhood": null,
+			"postalCode": "08001",
+			"city": "Barranquilla",
+			"state": "ATLÁNTICO"
+		},
+		"items": [
+			{
+				"id": "14",
+				"name": "Rollitos paquete x12 Guayaba y arequipe",
+				"price": 1000.0,
+				"quantity": 1,
+				"discount": -150.0,
+				"deliveryType": "Normal",
+				"categoryId": "9",
+				"sellerId": "vtexcolseller01"
+			}
+		],
+		"shippingValue": 900.0,
+		"taxValue": 0.0
+	},
+	"url": "http://pcopayment--vtexcol.myvtex.com/admin/checkout/#/orders?q=1084452702723",
+	"callbackUrl": "https://vtexcol.vtexpayments.com.br/api/pvt/payment-provider/transactions/7EA2B84046B24D3F9D80DEFDD2E82935/payments/CEDA61F0F6DE460EBBCDDC405BE2F98B/callback?accountName=vtexcol",
+	"returnUrl": "https://vtexcol.vtexpayments.com.br/payment-provider/transactions/7EA2B84046B24D3F9D80DEFDD2E82935/payments/CEDA61F0F6DE460EBBCDDC405BE2F98B/return?accountName=vtexcol",
+	"inboundRequestsUrl": "https://vtexcol.vtexpayments.com.br/payment-provider/transactions/7EA2B84046B24D3F9D80DEFDD2E82935/payments/CEDA61F0F6DE460EBBCDDC405BE2F98B/inbound-request/:action"
 }
