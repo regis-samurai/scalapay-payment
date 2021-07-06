@@ -6,5 +6,5 @@ export const config = {
     const host = window.location.host; 
     return `https://${host}/_v/scalapay-script`
   },
-  token: 'qhtfs87hjnc12kkos',
+  token: 'sp_25pejliikq2i7m4t',
 }
