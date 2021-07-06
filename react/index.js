@@ -261,7 +261,7 @@ class ModalScalapay extends Component {
     }
 
     body.totalAmount = {
-      amount: String(orderForm.value),
+      amount: String(orderForm.value / 100),
       currency,
     }
 
@@ -290,19 +290,19 @@ class ModalScalapay extends Component {
       delete subcategories[productCategoryIds[0]]
 
       const category =
-        item.productCategories[productCategoryIds[0]] || 'default'
+        item.productCategories[productCategoryIds[0]] || 'MainCategory'
       const subcategory = Object.values(subcategories)
 
       return {
         name: item.name,
         category,
-        subcategory: subcategory.length ? subcategory : ['default'],
+        subcategory: subcategory.length ? subcategory : ['MainCategory'],
         brand: item.additionalInfo.brandName,
         gtin: String(item.ean | item.refId | item.id),
         sku: item.id,
         quantity: item.quantity,
         price: {
-          amount: String(item.price),
+          amount: String(item.price / 100),
           currency,
         },
       }

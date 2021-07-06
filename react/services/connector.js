@@ -3,7 +3,7 @@ import { config } from '../config/configScalapay'
 const headers = {
   Accept: 'application/json',
   'Content-Type': 'application/json',
-  Authorization: 'Bearer qhtfs87hjnc12kkos',
+  Authorization: `Bearer ${config.token}`,
 }
 
 export async function createOrder(body) {
@@ -33,6 +33,27 @@ export async function captureOrder(token) {
 
     const data = await response.json()
     return data
+  } catch (e) {
+    // TODO: Validar correctamente los errores
+    return e
+  }
+}
+
+export async function cancelOrder(token) {
+  try {
+    // const response = await fetch(config.getUrl('/payments/capture'), {
+    //   method: 'POST',
+    //   headers,
+    //   body: JSON.stringify({
+    //     token,
+    //   }),
+    // })
+
+    // const data = await response.json()
+    // return data
+
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    return true
   } catch (e) {
     // TODO: Validar correctamente los errores
     return e
