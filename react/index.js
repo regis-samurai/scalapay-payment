@@ -1,13 +1,11 @@
 import React, { Component } from 'react'
-import { intlShape, injectIntl } from 'react-intl'
-import { config } from './config/configScalapay'
+import { injectIntl, intlShape } from 'react-intl'
 import {
   cancel,
   checksucess,
   creditcard,
   creditcarderror,
   hourglass,
-  info,
   interfaceblock,
   interfaceerror,
   interfacevtex,
@@ -20,7 +18,13 @@ import {
   retry,
 } from './config/importsAssets'
 import styles from './index.css'
-import { captureOrder, createOrder, simulatePayments } from './services/connector'
+import {
+  cancelOrder,
+  captureOrder,
+  createOrder,
+  simulatePayments,
+} from './services/connector'
+import { backdrop, getOrderData } from './shared'
 
 class ModalScalapay extends Component {
   state = {
@@ -47,12 +51,11 @@ class ModalScalapay extends Component {
   }
   paymentId = null
 
-  
   componentDidMount() {
     $(window).trigger('removePaymentLoading.vtex')
     window.addEventListener('message', this.handleMessages, false)
 
-    this.backdrop()
+    backdrop()
     this.getCheckoutUrl()
   }
 
@@ -60,27 +63,34 @@ class ModalScalapay extends Component {
     target.removeEventListener('message', this.handleMessages, false)
   }
 
-
   getCheckoutUrl = () => {
-    
-    simulatePayments().then(res =>{
-      const body = this.getBody()
+    simulatePayments().then((res) => {
+      const body = getOrderData()
       this.paymentId = res.paymentId
-      createOrder(body, res.paymentId).then((response) => {
-        const { responseData } = response
-        const {checkoutUrl, token, expiresDate} = JSON.parse(responseData.content)
-        if (token) {
-          this.setState({
-            changeImgOne: checksucess,
-            changeImgTwo: numbertwoanimated,
-          })
-          this.checkoutUrl = {
-            value: checkoutUrl,
-            expires: expiresDate,
+
+      createOrder(body, res.paymentId)
+        .then((res) => {
+          if (res.responseData?.statusCode === 200) {
+            const { checkoutUrl, expiresDate } = JSON.parse(
+              res.responseData.content
+            )
+            this.setState({
+              changeImgOne: checksucess,
+              changeImgTwo: numbertwoanimated,
+            })
+            this.checkoutUrl = {
+              value: checkoutUrl,
+              expires: expiresDate,
+            }
+            this.createChildWindow()
+          } else {
+            this.cancelPayment()
           }
-          this.createChildWindow()
-        }
-      })
+        })
+        .catch((err) => {
+          console.log('Error al crear la orden: ', err)
+          this.cancelPayment()
+        })
     })
   }
 
@@ -102,9 +112,8 @@ class ModalScalapay extends Component {
 
   handleMessages = (e) => {
     if (
-      e.data &&
-      e.data.source === 'scalapay-checkout' &&
-      e.data.event === 'payment-result'
+      e.data?.source === 'scalapay-checkout' &&
+      e.data?.event === 'payment-result'
     ) {
       const payload = e.data.payload
       this.childWindow.close()
@@ -115,17 +124,26 @@ class ModalScalapay extends Component {
           changeImgThree: numberthreeanimated,
           statusFailed2: false,
         })
-        captureOrder({token: payload.orderToken, merchantReference: vtexjs.checkout.orderForm.orderGroup, paymentId: this.paymentId})
+
+        captureOrder({
+          token: payload.orderToken,
+          merchantReference: vtexjs.checkout.orderForm.orderGroup,
+          paymentId: this.paymentId,
+        })
           .then((res) => {
             const content = JSON.parse(res.responseData.content)
-            if (content.status === 'approved') {
+
+            if (
+              res.responseData?.statusCode === 200 &&
+              content.status === 'approved'
+            ) {
               this.setState({
                 changeImgThree: checksucess,
               })
-              //go to orderplace
+              // Go to orderPlace
               this.respondTransaction(true)
             } else {
-              //failed del paso 3
+              // Failed message for step 3
               this.setState({
                 messageStep3: 'scalapay.process.failedPayment',
                 changeImgThree: cancel,
@@ -134,11 +152,13 @@ class ModalScalapay extends Component {
                 statusFailed3: true,
                 showReload: true,
               })
+              this.cancelPayment()
             }
           })
           .catch((err) => {
-            // TODO: Informar al usuario, intentar 3 veces y sino funciona cancelar pago 
+            // TODO: Informar al usuario y  cancelar pago
             console.log('captureOrder err: ', err)
+            this.cancelPayment()
           })
       } else {
         this.setState({
@@ -160,30 +180,6 @@ class ModalScalapay extends Component {
   // TODO: Usar esto para redirigir a orderPlaced o informar error
   respondTransaction = (status) => {
     $(window).trigger('transactionValidation.vtex', [status])
-  }
-
-  backdrop = (active = true) => {
-    const $div = $('#scalapay-background')
-
-    if (active && !$div.length) {
-      const el = document.createElement('div')
-
-      $(el)
-        .attr('id', 'scalapay-background')
-        .css({
-          'background-color': 'rgba(0,0,0,0.8)',
-          position: 'fixed',
-          width: '100%',
-          height: '100vh',
-          top: 0,
-          'z-index': '100',
-        })
-        .appendTo($('body'))
-    }
-
-    if (!active && $div.length) {
-      $div.remove()
-    }
   }
 
   retryPayment = () => {
@@ -210,6 +206,26 @@ class ModalScalapay extends Component {
     }
   }
 
+  cancelPayment = () => {
+    cancelOrder(this.paymentId)
+      .then((res) => {
+        if (res.responseData?.statusCode === 200) {
+          // TODO: Informar al usuario que no se pudo realizar el paso 1
+          console.log('Pago cancelado exitosamente')
+        } else {
+          // TODO: Hacer lo mismo del catch, usar una función para no repetir código
+          console.log('No se pudo cancelar el pago')
+        }
+      })
+      .catch((err) => {
+        // TODO: Informar error al usuario y pedirle que se comunique con soporte
+        console.log('Error al cancelar el pago: ', err)
+      })
+      .finally(() => {
+        // TODO: Mostrar botón para cerrar la modal
+      })
+  }
+
   handleCloseChildWindow = () => {
     // If statusFailed2 is null step two is not finished
     if (this.state.statusFailed2 === null) {
@@ -228,84 +244,18 @@ class ModalScalapay extends Component {
     }
   }
 
-  getBody = () => {
-    const body = {}
-    const orderForm = vtexjs.checkout.orderForm
-    const countryCode = orderForm.shippingData.address.country.slice(0, 2)
-    const currency = 'EUR'
-
-    body.merchantReference = orderForm.orderGroup
-    body.orderExpiryMilliseconds = 1800000
-
-    body.merchant = {
-      redirectConfirmUrl: config.redirectUrl(),
-      redirectCancelUrl: config.redirectUrl(),
-    }
-
-    body.totalAmount = {
-      amount: String(orderForm.value / 100),
-      currency,
-    }
-
-    body.consumer = {
-      phoneNumber: orderForm.clientProfileData.phone,
-      givenNames: orderForm.clientProfileData.firstName,
-      surname: orderForm.clientProfileData.lastName,
-      email: orderForm.clientProfileData.email,
-    }
-
-    body.shipping = {
-      name: orderForm.shippingData.address.receiverName,
-      line1: orderForm.shippingData.address.street,
-      suburb: orderForm.shippingData.address.city,
-      postcode: orderForm.shippingData.address.postalCode,
-      countryCode,
-      phoneNumber: orderForm.clientProfileData.phone,
-    }
-
-    body.items = orderForm.items.map((item) => {
-      const productCategoryIds = item.productCategoryIds
-        .split('/')
-        .filter((x) => x)
-      const subcategories = item.productCategories
-
-      delete subcategories[productCategoryIds[0]]
-
-      const category =
-        item.productCategories[productCategoryIds[0]] || 'MainCategory'
-      const subcategory = Object.values(subcategories)
-
-      return {
-        name: item.name,
-        category,
-        subcategory: subcategory.length ? subcategory : ['MainCategory'],
-        brand: item.additionalInfo.brandName,
-        gtin: String(item.ean | item.refId | item.id),
-        sku: item.id,
-        quantity: item.quantity,
-        price: {
-          amount: String(item.price / 100),
-          currency,
-        },
-      }
-    })
-
-    return body
-  }
-
   render() {
     const { intl } = this.props
     return (
       <div className={styles.wrapper}>
         <div className={styles.headerModal}>
           <h2 className={styles.titleHeader}>
-            {
-              intl.formatMessage({
-                id: 'scalapay.title.head',
-              })
-            }
+            {intl.formatMessage({
+              id: 'scalapay.title.head',
+            })}
           </h2>
         </div>
+
         <div className={styles.row}>
           <div className={styles.column} id={styles.column1}>
             {/* Step 1 */}
@@ -351,11 +301,9 @@ class ModalScalapay extends Component {
             <div className={styles.containerInfo}>
               <img src={hourglass} className={styles.imgInfo} alt="loading" />
               <p className={styles.textInfo}>
-                {
-                  intl.formatMessage({
-                    id: 'scalapay.step.step1',
-                  })
-                }
+                {intl.formatMessage({
+                  id: 'scalapay.step.step1',
+                })}
               </p>
             </div>
 
@@ -369,27 +317,34 @@ class ModalScalapay extends Component {
               <p
                 className={styles.textInfo}
                 style={{ color: this.state.colorFont }}>
-                {
-                  intl.formatMessage({
-                    id: this.state.messageStep2,
-                  })
-                }
+                {intl.formatMessage({
+                  id: this.state.messageStep2,
+                })}
                 {this.state.childWindowClosedUnexpectedly && (
-                <div onClick={() => this.retryPayment()} className={styles.retry}>
-                  <img src={retry} alt="retry" />
-                  <p>
-                    {
-                      intl.formatMessage({
+                  <div
+                    onClick={() => this.retryPayment()}
+                    className={styles.retry}>
+                    <img src={retry} alt="retry" />
+                    <p>
+                      {intl.formatMessage({
                         id: 'scalapay.process.retry',
-                      })
-                    }
-                  </p>
-                </div>
-              )}
-              {this.state.showReload && ( <div className={styles.retry}>
-                <p>Close this window <a href="#" className={styles.hiperlink} onClick={() => document.location.reload(true)}>here</a></p>
-              </div>)
-              }
+                      })}
+                    </p>
+                  </div>
+                )}
+                {this.state.showReload && (
+                  <div className={styles.retry}>
+                    <p>
+                      Close this window{' '}
+                      <a
+                        href="#"
+                        className={styles.hiperlink}
+                        onClick={() => document.location.reload(true)}>
+                        here
+                      </a>
+                    </p>
+                  </div>
+                )}
               </p>
             </div>
 
@@ -403,40 +358,35 @@ class ModalScalapay extends Component {
               <p
                 className={styles.textInfo}
                 style={{ color: this.state.colorBlock }}>
-                {
-                  intl.formatMessage({
-                    id: this.state.messageStep3,
-                  })
-                }
+                {intl.formatMessage({
+                  id: this.state.messageStep3,
+                })}
               </p>
             </div>
           </div>
         </div>
-        <div className={styles.containerFooter}>
+        {/* <div className={styles.containerFooter}>
           <img src={info} alt="info" />
           <p>
-            {
-              intl.formatMessage({
-                id: 'scalapay.info.popup',
-              })
-            }
-            {' '}
-            <a href="https://support.google.com/chrome/answer/95472?co=GENIE.Platform%3DDesktop&hl=en" target="_blank">
-              {
-                intl.formatMessage({
-                  id: 'scalapay.info.clic',
-                })
-              }
+            {intl.formatMessage({
+              id: 'scalapay.info.popup',
+            })}{' '}
+            <a
+              href="https://support.google.com/chrome/answer/95472?co=GENIE.Platform%3DDesktop&hl=en"
+              target="_blank">
+              {intl.formatMessage({
+                id: 'scalapay.info.clic',
+              })}
             </a>
           </p>
-        </div>
+        </div> */}
       </div>
     )
   }
 }
 
 ModalScalapay.propTypes = {
-  intl: intlShape.isRequired
+  intl: intlShape.isRequired,
 }
 
 export default injectIntl(ModalScalapay)

@@ -1,49 +1,33 @@
-import { config } from '../config/configScalapay'
 import { bodyScalapay } from '../bodyScalapay'
+import { config } from '../config/configScalapay'
+import { uuid } from '../shared'
 
 const headers = {
   Accept: 'application/json',
   'Content-Type': 'application/json',
-  Authorization: `Bearer ${config.token}`,
-}
-
-const uuid = () => {
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
-    .replace(/[xy]/g, (c) => {
-      let r = (Math.random() * 16) | 0,
-        v = c == "x" ? r : (r & 0x3) | 0x8;
-      return v.toString(16);
-    })
-    .replace(/-/g, "")
-    .toUpperCase();
+  // TODO: Eliminar, se usaba cuando consumíamos la API de Scalapay directamente
+  // Authorization: `Bearer ${config.token}`,
 }
 
 export async function createOrder(body, paymentId) {
   try {
-    console.log("order detail ", {
-      requestId: "LA4E20D3B4E07B7E871F5B5BC9F91",
-      transactionId: "7EA2B84046B24D3F9D80DEFDD2E82935",
-      paymentId: paymentId,
-      authorizationId: null,
-      tid: null,
-      requestData: {
-        body: JSON.stringify(body)
+    const response = await fetch(
+      config.getUrl(paymentId + '/inbound/order-detail'),
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          requestId: 'LA4E20D3B4E07B7E871F5B5BC9F91',
+          transactionId: '7EA2B84046B24D3F9D80DEFDD2E82935',
+          paymentId: paymentId,
+          authorizationId: null,
+          tid: null,
+          requestData: {
+            body: JSON.stringify(body),
+          },
+        }),
       }
-    })
-    const response = await fetch(config.getUrl(paymentId+'/inbound/order-detail'), {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        requestId: "LA4E20D3B4E07B7E871F5B5BC9F91",
-        transactionId: "7EA2B84046B24D3F9D80DEFDD2E82935",
-        paymentId: paymentId,
-        authorizationId: null,
-        tid: null,
-        requestData: {
-          body: JSON.stringify(body)
-        }
-      }),
-    })
+    )
 
     const data = await response.json()
     return data
@@ -53,74 +37,62 @@ export async function createOrder(body, paymentId) {
 }
 
 export async function captureOrder(params) {
-  console.log("capture ", JSON.stringify({
-    requestId: "LA4E20D3B4E07B7E871F5B5BC9F91",
-    transactionId: "7EA2B84046B24D3F9D80DEFDD2E82935",
-    paymentId: params.paymentId,
-    authorizationId: null,
-    tid: null,
-    requestData: {
-        body: JSON.stringify({token: params.token, merchantReference: params.merchantReference})
-    }
-  }))
   try {
-    const response = await fetch(config.getUrl(params.paymentId+'/inbound/capture'), {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        requestId: "LA4E20D3B4E07B7E871F5B5BC9F91",
-        transactionId: "7EA2B84046B24D3F9D80DEFDD2E82935",
-        paymentId: params.paymentId,
-        authorizationId: null,
-        tid: null,
-        requestData: {
-            body: JSON.stringify({token: params.token, merchantReference: params.merchantReference})
-        }
-      }),
-    })
-
-    const data = await response.json()
-    return data
-  } catch (e) {
-    // TODO: Validar correctamente los errores
-    return e
-  }
-}
-
-export async function cancelOrder(token) {
-  try {
-    // const response = await fetch(config.getUrl('/payments/capture'), {
-    //   method: 'POST',
-    //   headers,
-    //   body: JSON.stringify({
-    //     token,
-    //   }),
-    // })
-
-    // const data = await response.json()
-    // return data
-
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    return true
-  } catch (e) {
-    // TODO: Validar correctamente los errores
-    return e
-  }
-}
-
-
-
-export async function simulatePayments (){
-  try {
-    bodyScalapay.paymentId = uuid()
-    const response = await fetch(config.getUrl(''), {
+    const response = await fetch(
+      config.getUrl(params.paymentId + '/inbound/capture'),
+      {
         method: 'POST',
         headers,
-        body: JSON.stringify(bodyScalapay)
+        body: JSON.stringify({
+          requestId: 'LA4E20D3B4E07B7E871F5B5BC9F91',
+          transactionId: '7EA2B84046B24D3F9D80DEFDD2E82935',
+          paymentId: params.paymentId,
+          authorizationId: null,
+          tid: null,
+          requestData: {
+            body: JSON.stringify({
+              token: params.token,
+              merchantReference: params.merchantReference,
+            }),
+          },
+        }),
+      }
+    )
+
+    const data = await response.json()
+    return data
+  } catch (e) {
+    // TODO: Validar correctamente los errores
+    return e
+  }
+}
+
+export async function cancelOrder(paymentId) {
+  try {
+    const response = await fetch(config.getUrl(`${paymentId}/inbound/cancel`), {
+      method: 'POST',
+      headers,
+    })
+
+    const data = await response.json()
+    return data
+  } catch (e) {
+    // TODO: Validar correctamente los errores
+    return e
+  }
+}
+
+export async function simulatePayments() {
+  try {
+    bodyScalapay.paymentId = uuid()
+    const response = await fetch(config.getUrl(), {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(bodyScalapay),
     })
     const data = await response.json()
     return data
-  }catch (e) {
+  } catch (e) {
     // TODO: Validar correctamente los errores
     return e
   }
