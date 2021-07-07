@@ -22,13 +22,6 @@ import {
 import styles from './index.css'
 import { captureOrder, createOrder, simulatePayments } from './services/connector'
 
-/*const messages = defineMessages({
-  step2: {
-    id: 'scalapay.step.step2',
-    defaultMessage: '',
-  }
-})*/
-
 class ModalScalapay extends Component {
   state = {
     changeImgOne: numberoneanimated,
@@ -52,11 +45,10 @@ class ModalScalapay extends Component {
     value: null,
     expires: null,
   }
+  paymentId = null
 
   
   componentDidMount() {
-    const orderForm = vtexjs.checkout.orderForm
-    console.log("")
     $(window).trigger('removePaymentLoading.vtex')
     window.addEventListener('message', this.handleMessages, false)
 
@@ -73,9 +65,8 @@ class ModalScalapay extends Component {
     
     simulatePayments().then(res =>{
       const body = this.getBody()
+      this.paymentId = res.paymentId
       createOrder(body, res.paymentId).then((response) => {
-
-        console.log("RESPONSEEEE ", response)
         const { responseData } = response
         const {checkoutUrl, token, expiresDate} = JSON.parse(responseData.content)
         if (token) {
@@ -94,8 +85,6 @@ class ModalScalapay extends Component {
   }
 
   createChildWindow = () => {
-    console.log('checkoutUrl: ', this.checkoutUrl)
-
     if (this.intervalId) {
       clearInterval(this.intervalId)
     }
@@ -126,9 +115,10 @@ class ModalScalapay extends Component {
           changeImgThree: numberthreeanimated,
           statusFailed2: false,
         })
-        captureOrder(payload.orderToken)
+        captureOrder({token: payload.orderToken, merchantReference: vtexjs.checkout.orderForm.orderGroup, paymentId: this.paymentId})
           .then((res) => {
-            if (res.status === 'APPROVED') {
+            const content = JSON.parse(res.responseData.content)
+            if (content.status === 'approved') {
               this.setState({
                 changeImgThree: checksucess,
               })
@@ -149,9 +139,6 @@ class ModalScalapay extends Component {
           .catch((err) => {
             // TODO: Informar al usuario, intentar 3 veces y sino funciona cancelar pago 
             console.log('captureOrder err: ', err)
-          })
-          .finally(() => {
-            // TODO: Parar loader
           })
       } else {
         this.setState({
@@ -248,7 +235,7 @@ class ModalScalapay extends Component {
     const currency = 'EUR'
 
     body.merchantReference = orderForm.orderGroup
-    body.orderExpiryMilliseconds = 3600000 // 1 hour
+    body.orderExpiryMilliseconds = 1800000
 
     body.merchant = {
       redirectConfirmUrl: config.redirectUrl(),
@@ -307,7 +294,6 @@ class ModalScalapay extends Component {
   }
 
   render() {
-    console.log(this.props)
     const { intl } = this.props
     return (
       <div className={styles.wrapper}>

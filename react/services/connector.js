@@ -20,7 +20,7 @@ const uuid = () => {
 
 export async function createOrder(body, paymentId) {
   try {
-    console.log({
+    console.log("order detail ", {
       requestId: "LA4E20D3B4E07B7E871F5B5BC9F91",
       transactionId: "7EA2B84046B24D3F9D80DEFDD2E82935",
       paymentId: paymentId,
@@ -52,13 +52,30 @@ export async function createOrder(body, paymentId) {
   }
 }
 
-export async function captureOrder(token) {
+export async function captureOrder(params) {
+  console.log("capture ", JSON.stringify({
+    requestId: "LA4E20D3B4E07B7E871F5B5BC9F91",
+    transactionId: "7EA2B84046B24D3F9D80DEFDD2E82935",
+    paymentId: params.paymentId,
+    authorizationId: null,
+    tid: null,
+    requestData: {
+        body: JSON.stringify({token: params.token, merchantReference: params.merchantReference})
+    }
+  }))
   try {
-    const response = await fetch(config.getUrl('/payments/capture'), {
+    const response = await fetch(config.getUrl(params.paymentId+'/inbound/capture'), {
       method: 'POST',
       headers,
       body: JSON.stringify({
-        token,
+        requestId: "LA4E20D3B4E07B7E871F5B5BC9F91",
+        transactionId: "7EA2B84046B24D3F9D80DEFDD2E82935",
+        paymentId: params.paymentId,
+        authorizationId: null,
+        tid: null,
+        requestData: {
+            body: JSON.stringify({token: params.token, merchantReference: params.merchantReference})
+        }
       }),
     })
 
