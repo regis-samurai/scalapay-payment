@@ -1,10 +1,15 @@
 import { config } from '../config/configScalapay'
+import { OrderBody } from './types'
 
-export async function sleep(ms) {
+export async function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-export async function retry(ms, fn, object) {
+export async function retry(
+  ms: number,
+  fn: (...arg: any[]) => any,
+  object: any
+) {
   await sleep(ms)
   return fn(...object)
 }
@@ -21,7 +26,7 @@ export const uuid = () => {
 }
 
 export const getOrderData = () => {
-  const body = {}
+  const body: OrderBody = {} as OrderBody
   const orderForm = vtexjs.checkout.orderForm
   const countryCode = orderForm.shippingData.address.country.slice(0, 2)
   const currency = 'EUR'
@@ -55,10 +60,10 @@ export const getOrderData = () => {
     phoneNumber: orderForm.clientProfileData.phone,
   }
 
-  body.items = orderForm.items.map((item) => {
+  body.items = orderForm.items.map((item: any) => {
     const productCategoryIds = item.productCategoryIds
       .split('/')
-      .filter((x) => x)
+      .filter((x: any) => x)
     const subcategories = item.productCategories
 
     delete subcategories[productCategoryIds[0]]

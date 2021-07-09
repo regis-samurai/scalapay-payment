@@ -101,66 +101,69 @@
   margin-right: 10px;
 }
 
-.retry{
+.retry {
   display: flex;
   align-items: center;
-  margin-top: 3px;
+  margin-top: 10px;
   cursor: pointer;
 }
 
-.retry img{
+.retry img {
   width: 10%;
+  margin-right: 6px;
 }
 
-.retry p{
-  font-size: 11px;
+.retry p {
+  font-size: 12px;
+  line-height: 14px;
   color: #0b172b;
-  margin-top: 3px;
+  margin: 0;
 }
 
-.hiperlink{
+.retry p:hover {
+  text-decoration: underline;
+}
+
+.hiperlink {
   color: #0b172b;
   font-weight: 800;
   text-decoration: revert;
 }
 
-
 @media only screen and (min-width: 320px) and (max-width: 377px) {
   .titleHeader {
     text-align: center;
   }
-  .verticalLine{
+  .verticalLine {
     margin-left: 15px;
     height: 100px;
   }
 
-  .textInfo{
+  .textInfo {
     font-size: 12px;
   }
 
-  .containerInfo{
+  .containerInfo {
     align-items: flex-start;
     height: 120px;
     margin-bottom: 10px;
   }
 }
 
-
-
 @media only screen and (min-width: 375px) and (max-width: 424px) {
-  .verticalLine{
+  .verticalLine {
     margin-left: 18px;
   }
 }
 
 @media only screen and (min-width: 425px) and (max-width: 767px) {
-  .verticalLine{
+  .verticalLine {
     margin-left: 20px;
   }
 }
 
 @media only screen and (min-width: 768px) and (max-width: 1023px) {
-  .verticalLine{
+  .verticalLine {
     margin-left: 19px;
   }
 }
@@ -169,6 +172,4 @@
   .wrapper {
     width: 100%;
   }
-
 }
-
