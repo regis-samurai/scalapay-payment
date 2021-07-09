@@ -1,6 +1,8 @@
 import React, { Component } from 'react'
-import { InjectedIntlProps, injectIntl } from 'react-intl'
+import type { InjectedIntlProps } from 'react-intl'
+import { injectIntl } from 'react-intl'
 
+import { StepNumber, StepBlock } from './components'
 import {
   Cancel,
   CheckSuccess,
@@ -10,11 +12,11 @@ import {
   InterfaceBlock,
   InterfaceError,
   InterfaceVtex,
-  NumberTwo,
-  NumberThree,
   NumberBlock,
   NumberOneAnimated,
+  NumberThree,
   NumberThreeAnimated,
+  NumberTwo,
   NumberTwoAnimated,
   Retry,
 } from './config'
@@ -23,31 +25,14 @@ import {
   cancelOrder,
   captureOrder,
   createOrder,
-  simulatePayments,
+  simulatePayment,
 } from './services/connector'
+import type { ModalState } from './shared'
 import { backdrop, getOrderData } from './shared'
-import { StepNumber } from './components'
 
 type CheckoutUrl = {
   value: string | null
   expires: string | null
-}
-
-type StepState = {
-  imgNumber: any
-  imgBlock: any
-  message?: string
-  fontColor?: string
-  blockColor?: string
-  statusFailed: boolean | null
-}
-
-export interface ModalState {
-  stepOne: StepState
-  stepTwo: StepState
-  stepThree: StepState
-  showReload: boolean
-  childWindowClosedUnexpectedly: boolean
 }
 
 const BASE_COLOR = 'black' as const
@@ -62,20 +47,27 @@ class Modal extends Component<InjectedIntlProps, ModalState> {
       imgBlock: Hourglass,
       statusFailed: null,
       message: 'scalapay.step.step1',
+      blockStyles: {
+        color: BASE_COLOR,
+      },
     },
     stepTwo: {
       imgNumber: NumberTwo,
       imgBlock: CreditCard,
       statusFailed: null,
       message: 'scalapay.step.step2',
-      fontColor: BASE_COLOR,
+      blockStyles: {
+        color: BASE_COLOR,
+      },
     },
     stepThree: {
       imgNumber: NumberThree,
       imgBlock: InterfaceVtex,
       statusFailed: null,
       message: 'scalapay.step.step3',
-      blockColor: BASE_COLOR,
+      blockStyles: {
+        color: BASE_COLOR,
+      },
     },
     showReload: false,
     childWindowClosedUnexpectedly: false,
@@ -102,28 +94,28 @@ class Modal extends Component<InjectedIntlProps, ModalState> {
   }
 
   getCheckoutUrl = () => {
-    simulatePayments().then((res) => {
+    simulatePayment().then((simulatePaymentRes) => {
       const body = getOrderData()
 
-      this.paymentId = res.paymentId
+      this.paymentId = simulatePaymentRes.paymentId
 
-      createOrder(body, res.paymentId)
+      createOrder(body, simulatePaymentRes.paymentId)
         .then((res) => {
           if (res.responseData?.statusCode === 200) {
             const { checkoutUrl, expiresDate } = JSON.parse(
               res.responseData.content
             )
 
-            this.setState({
+            this.setState((state) => ({
               stepOne: {
-                ...this.state.stepOne,
+                ...state.stepOne,
                 imgNumber: CheckSuccess,
               },
               stepTwo: {
-                ...this.state.stepTwo,
+                ...state.stepTwo,
                 imgNumber: NumberTwoAnimated,
               },
-            })
+            }))
             this.checkoutUrl = {
               value: checkoutUrl,
               expires: expiresDate,
@@ -142,147 +134,166 @@ class Modal extends Component<InjectedIntlProps, ModalState> {
   }
 
   createChildWindow = () => {
-    if (!this.checkoutUrl.value)
+    if (!this.checkoutUrl.value) {
       throw new Error('Scalapay checkout url required')
+    }
 
     if (this.intervalId) {
       clearInterval(this.intervalId)
     }
 
-    this.childWindow = window.open(this.checkoutUrl.value, '_blank')
-    this.intervalId = window.setInterval(childWindowIsClosed.bind(this), 1000)
-
-    function childWindowIsClosed(this: Modal) {
+    const childWindowIsClosed = () => {
       if (this.childWindow?.closed) {
         this.intervalId != null && clearInterval(this.intervalId)
         this.handleCloseChildWindow()
       }
     }
+
+    this.childWindow = window.open(this.checkoutUrl.value, '_blank')
+    this.intervalId = window.setInterval(childWindowIsClosed, 1000)
   }
 
-  handleMessages = (e: MessageEvent) => {
+  handleMessages = ({ data }: MessageEvent) => {
     if (
-      e.data?.source === 'scalapay-checkout' &&
-      e.data?.event === 'payment-result'
+      data?.source !== 'scalapay-checkout' &&
+      data?.event !== 'payment-result'
     ) {
-      const { payload } = e.data
+      return
+    }
 
-      this.childWindow?.close()
+    const { payload } = data
 
-      if (payload.status === 'SUCCESS') {
-        if (!this.paymentId) throw new Error('PaymentId required')
+    this.childWindow?.close()
 
-        this.setState({
-          stepTwo: {
-            ...this.state.stepTwo,
-            imgNumber: CheckSuccess,
-            statusFailed: false,
-          },
-          stepThree: {
-            ...this.state.stepThree,
-            imgNumber: NumberThreeAnimated,
-          },
-        })
+    if (payload.status === 'SUCCESS') {
+      if (!this.paymentId) throw new Error('PaymentId required')
 
-        captureOrder({
-          token: payload.orderToken,
-          merchantReference: vtexjs.checkout.orderForm.orderGroup,
-          paymentId: this.paymentId,
-        })
-          .then((res) => {
-            const content = JSON.parse(res.responseData.content)
+      this.setState((state) => ({
+        stepTwo: {
+          ...state.stepTwo,
+          imgNumber: CheckSuccess,
+          statusFailed: false,
+        },
+        stepThree: {
+          ...state.stepThree,
+          imgNumber: NumberThreeAnimated,
+        },
+      }))
 
-            if (
-              res.responseData?.statusCode === 200 &&
-              content.status === 'approved'
-            ) {
-              this.setState({
-                stepThree: {
-                  ...this.state.stepThree,
-                  imgNumber: CheckSuccess,
+      captureOrder({
+        token: payload.orderToken,
+        merchantReference: vtexjs.checkout.orderForm.orderGroup,
+        paymentId: this.paymentId,
+      })
+        .then((res) => {
+          const content = JSON.parse(res.responseData.content)
+
+          if (
+            res.responseData?.statusCode === 200 &&
+            content.status === 'approved'
+          ) {
+            this.setState((state) => ({
+              stepThree: {
+                ...state.stepThree,
+                imgNumber: CheckSuccess,
+              },
+            }))
+            // Go to orderPlace
+            this.respondTransaction()
+          } else {
+            // Failed message for step 3
+            this.setState((state) => ({
+              stepThree: {
+                ...state.stepThree,
+                imgNumber: Cancel,
+                imgBlock: InterfaceError,
+                message: 'scalapay.process.failedPayment',
+                statusFailed: true,
+                blockStyles: {
+                  ...state.stepThree.blockStyles,
+                  color: ERROR_COLOR,
                 },
-              })
-              // Go to orderPlace
-              this.respondTransaction(true)
-            } else {
-              // Failed message for step 3
-              this.setState({
-                stepThree: {
-                  ...this.state.stepThree,
-                  imgNumber: Cancel,
-                  imgBlock: InterfaceError,
-                  message: 'scalapay.process.failedPayment',
-                  blockColor: ERROR_COLOR,
-                  statusFailed: true,
-                },
-                showReload: true,
-              })
-              this.cancelPayment()
-            }
-          })
-          .catch((err) => {
-            // TODO: Informar al usuario y  cancelar pago
-            console.log('captureOrder err: ', err)
+              },
+              showReload: true,
+            }))
             this.cancelPayment()
-          })
-      } else {
-        this.setState({
-          stepTwo: {
-            ...this.state.stepTwo,
-            imgNumber: Cancel,
-            imgBlock: CreditCardError,
-            message: 'scalapay.process.failedPayment',
-            fontColor: ERROR_COLOR,
-            statusFailed: true,
-          },
-          stepThree: {
-            ...this.state.stepThree,
-            imgNumber: NumberBlock,
-            imgBlock: InterfaceBlock,
-            message: 'scalapay.process.failedPayment',
-            blockColor: DISABLE_COLOR,
-            statusFailed: true,
-          },
-          showReload: true,
+          }
         })
-      }
+        .catch((err) => {
+          // TODO: Informar al usuario y  cancelar pago
+          console.log('captureOrder err: ', err)
+          this.cancelPayment()
+        })
+    } else {
+      this.setState((state) => ({
+        stepTwo: {
+          ...state.stepTwo,
+          imgNumber: Cancel,
+          imgBlock: CreditCardError,
+          message: 'scalapay.process.failedPayment',
+          statusFailed: true,
+          blockStyles: {
+            ...state.stepTwo.blockStyles,
+            color: ERROR_COLOR,
+          },
+        },
+        stepThree: {
+          ...state.stepThree,
+          imgNumber: NumberBlock,
+          imgBlock: InterfaceBlock,
+          message: 'scalapay.process.failedPayment',
+          statusFailed: true,
+          blockStyles: {
+            ...state.stepThree.blockStyles,
+            color: DISABLE_COLOR,
+          },
+        },
+        showReload: true,
+      }))
     }
   }
 
   // TODO: Usar esto para redirigir a orderPlaced o informar error
-  respondTransaction = (status: boolean) => {
+  respondTransaction = (status = true) => {
     backdrop(false)
     $(window).trigger('transactionValidation.vtex', [status])
   }
 
   retryPayment = () => {
-    if (!this.checkoutUrl.expires)
+    if (!this.checkoutUrl.expires) {
       throw new Error(
         'The expiration date of the url is required of the Scalapay checkout'
       )
+    }
 
     const checkoutUrlExpiresDate = new Date(this.checkoutUrl.expires).getTime()
     const currentDate = new Date().getTime()
 
-    this.setState({
+    this.setState((state) => ({
       stepTwo: {
-        ...this.state.stepTwo,
+        ...state.stepTwo,
         imgNumber: NumberTwoAnimated,
         imgBlock: CreditCard,
         message: 'scalapay.step.step2',
-        fontColor: BASE_COLOR,
         statusFailed: null,
+        blockStyles: {
+          ...state.stepThree.blockStyles,
+          color: DISABLE_COLOR,
+        },
       },
       stepThree: {
-        ...this.state.stepThree,
+        ...state.stepThree,
         imgNumber: NumberThree,
         imgBlock: InterfaceVtex,
         message: 'scalapay.process.failedPayment',
-        blockColor: BASE_COLOR,
         statusFailed: null,
+        blockStyles: {
+          ...state.stepThree.blockStyles,
+          color: DISABLE_COLOR,
+        },
       },
       childWindowClosedUnexpectedly: false,
-    })
+    }))
 
     if (currentDate <= checkoutUrlExpiresDate) {
       this.createChildWindow()
@@ -316,9 +327,9 @@ class Modal extends Component<InjectedIntlProps, ModalState> {
   handleCloseChildWindow = () => {
     // If statusFailed2 is null step two is not finished
     if (this.state.stepTwo.statusFailed === null) {
-      this.setState({
+      this.setState((state) => ({
         stepTwo: {
-          ...this.state.stepTwo,
+          ...state.stepTwo,
           imgNumber: Cancel,
           imgBlock: CreditCardError,
           message: 'scalapay.process.closeWindow',
@@ -326,7 +337,7 @@ class Modal extends Component<InjectedIntlProps, ModalState> {
           statusFailed: true,
         },
         stepThree: {
-          ...this.state.stepThree,
+          ...state.stepThree,
           imgNumber: NumberBlock,
           imgBlock: InterfaceBlock,
           message: 'scalapay.process.failedPayment',
@@ -334,12 +345,13 @@ class Modal extends Component<InjectedIntlProps, ModalState> {
           statusFailed: true,
         },
         childWindowClosedUnexpectedly: true,
-      })
+      }))
     }
   }
 
   render() {
     const { intl } = this.props
+    const { stepOne, stepTwo, stepThree } = this.state
 
     return (
       <div className={styles.wrapper}>
@@ -355,119 +367,64 @@ class Modal extends Component<InjectedIntlProps, ModalState> {
           <div className={styles.column} id={styles.column1}>
             {/* Step 1 */}
             <StepNumber
-              iconImg={this.state.stepOne.imgNumber}
+              iconImg={stepOne.imgNumber}
               style={{
-                borderColor: this.state.stepTwo.statusFailed
-                  ? ERROR_COLOR
-                  : PINK_COLOR,
+                borderColor: stepTwo.statusFailed ? ERROR_COLOR : PINK_COLOR,
               }}
             />
 
             {/* Step 2 */}
             <StepNumber
-              iconImg={this.state.stepTwo.imgNumber}
+              iconImg={stepTwo.imgNumber}
               style={{
-                borderColor: this.state.stepThree.statusFailed
+                borderColor: stepThree.statusFailed
                   ? DISABLE_COLOR
                   : PINK_COLOR,
               }}
             />
 
             {/* Step 3 */}
-            <StepNumber
-              iconImg={this.state.stepThree.imgNumber}
-              hideVerticalLine
-            />
+            <StepNumber iconImg={stepThree.imgNumber} hideVerticalLine />
           </div>
 
           <div className={styles.column} id={styles.column2}>
             {/* Step 1 */}
-            <div className={styles.containerInfo}>
-              <img src={Hourglass} className={styles.imgInfo} alt="loading" />
-              <p className={styles.textInfo}>
-                {intl.formatMessage({
-                  id: 'scalapay.step.step1',
-                })}
-              </p>
-            </div>
+            <StepBlock {...stepOne} />
 
             {/* Step 2 */}
-            <div className={styles.containerInfo}>
-              <img
-                src={this.state.stepTwo.imgBlock}
-                className={styles.imgInfo}
-                alt="loading"
-              />
-              <p
-                className={styles.textInfo}
-                style={{ color: this.state.stepTwo.fontColor }}
-              >
-                {intl.formatMessage({
-                  id: this.state.stepTwo.message,
-                })}
-                {this.state.childWindowClosedUnexpectedly && (
-                  <div
-                    onClick={() => this.retryPayment()}
-                    className={styles.retry}
-                  >
-                    <img src={Retry} alt="retry" />
-                    <p>
-                      {intl.formatMessage({
-                        id: 'scalapay.process.retry',
-                      })}
-                    </p>
-                  </div>
-                )}
-                {this.state.showReload && (
-                  <div className={styles.retry}>
-                    <p>
-                      Close this window{' '}
-                      <a
-                        href="#"
-                        className={styles.hiperlink}
-                        onClick={() => location.reload()}
-                      >
-                        here
-                      </a>
-                    </p>
-                  </div>
-                )}
-              </p>
-            </div>
+            <StepBlock {...stepTwo}>
+              {this.state.childWindowClosedUnexpectedly && (
+                <button
+                  onClick={() => this.retryPayment()}
+                  className={styles.retry}
+                >
+                  <img src={Retry} alt="retry" />
+                  <p>
+                    {intl.formatMessage({
+                      id: 'scalapay.process.retry',
+                    })}
+                  </p>
+                </button>
+              )}
+              {this.state.showReload && (
+                <div className={styles.retry}>
+                  <p>
+                    Close this window{' '}
+                    <button
+                      className={styles.hiperlink}
+                      onClick={() => window.location.reload()}
+                    >
+                      here
+                    </button>
+                  </p>
+                </div>
+              )}
+            </StepBlock>
 
             {/* Step 3 */}
-            <div className={styles.containerInfo}>
-              <img
-                src={this.state.stepThree.imgBlock}
-                className={styles.imgInfo}
-                alt="loading"
-              />
-              <p
-                className={styles.textInfo}
-                style={{ color: this.state.stepThree.blockColor }}
-              >
-                {intl.formatMessage({
-                  id: this.state.stepThree.message,
-                })}
-              </p>
-            </div>
+            <StepBlock {...stepThree} />
           </div>
         </div>
-        {/* <div className={styles.containerFooter}>
-          <img src={info} alt="info" />
-          <p>
-            {intl.formatMessage({
-              id: 'scalapay.info.popup',
-            })}{' '}
-            <a
-              href="https://support.google.com/chrome/answer/95472?co=GENIE.Platform%3DDesktop&hl=en"
-              target="_blank">
-              {intl.formatMessage({
-                id: 'scalapay.info.clic',
-              })}
-            </a>
-          </p>
-        </div> */}
       </div>
     )
   }

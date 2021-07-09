@@ -1,9 +1,11 @@
-type Amount = {
+import type { CSSProperties } from 'react'
+
+export type OrderAmount = {
   amount: string
   currency: string
 }
 
-type Item = {
+export type OrderItem = {
   name: string
   category: string
   subcategory: string[]
@@ -11,7 +13,7 @@ type Item = {
   gtin: string
   sku: string
   quantity: number
-  price: Amount
+  price: OrderAmount
 }
 
 export interface OrderBody {
@@ -21,7 +23,7 @@ export interface OrderBody {
     redirectConfirmUrl: string
     redirectCancelUrl: string
   }
-  totalAmount: Amount
+  totalAmount: OrderAmount
   consumer: {
     phoneNumber: string
     givenNames: string
@@ -36,5 +38,21 @@ export interface OrderBody {
     countryCode: string
     phoneNumber: string
   }
-  items: Item[]
+  items: OrderItem[]
+}
+
+export interface StepState {
+  imgNumber: string
+  imgBlock: string
+  message?: string
+  statusFailed: boolean | null
+  blockStyles?: CSSProperties
+}
+
+export interface ModalState {
+  stepOne: StepState
+  stepTwo: StepState
+  stepThree: StepState
+  showReload: boolean
+  childWindowClosedUnexpectedly: boolean
 }

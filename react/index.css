@@ -106,6 +106,9 @@
   align-items: center;
   margin-top: 10px;
   cursor: pointer;
+  background: transparent;
+  border: none;
+  text-align: left;
 }
 
 .retry img {

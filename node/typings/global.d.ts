@@ -1,5 +1,5 @@
-import { ServiceContext } from '@vtex/api'
-import { Clients } from '../clients'
+import type { ServiceContext } from '@vtex/api'
+import type { Clients } from '../clients'
 
 declare global {
   // We declare a global Context type just to avoid re-writing ServiceContext<Clients, State> in every handler and resolver

@@ -1,24 +1,12 @@
 import { config } from '../config/configScalapay'
-import { OrderBody } from './types'
-
-export async function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
-export async function retry(
-  ms: number,
-  fn: (...arg: any[]) => any,
-  object: any
-) {
-  await sleep(ms)
-  return fn(...object)
-}
+import type { OrderBody } from './types'
 
 export const uuid = () => {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
     .replace(/[xy]/g, (c) => {
-      let r = (Math.random() * 16) | 0,
-        v = c == 'x' ? r : (r & 0x3) | 0x8
+      const r = (Math.random() * 16) | 0
+      const v = c === 'x' ? r : (r & 0x3) | 0x8
+
       return v.toString(16)
     })
     .replace(/-/g, '')
@@ -27,7 +15,7 @@ export const uuid = () => {
 
 export const getOrderData = () => {
   const body: OrderBody = {} as OrderBody
-  const orderForm = vtexjs.checkout.orderForm
+  const { orderForm } = vtexjs.checkout
   const countryCode = orderForm.shippingData.address.country.slice(0, 2)
   const currency = 'EUR'
 
@@ -60,16 +48,19 @@ export const getOrderData = () => {
     phoneNumber: orderForm.clientProfileData.phone,
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   body.items = orderForm.items.map((item: any) => {
     const productCategoryIds = item.productCategoryIds
       .split('/')
-      .filter((x: any) => x)
+      .filter((x: unknown) => x)
+
     const subcategories = item.productCategories
 
     delete subcategories[productCategoryIds[0]]
 
     const category =
       item.productCategories[productCategoryIds[0]] || 'MainCategory'
+
     const subcategory = Object.values(subcategories)
 
     return {

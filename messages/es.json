@@ -4,7 +4,7 @@
   "scalapay.step.step3": "Al finalizar el proceso, volverás a la tienda para verificar el pago",
   "scalapay.process.failedPayment": "El pago ha fallado. Por favor, intenta con otro método de pago",
   "scalapay.process.closeWindow": "La ventana del pago de Scalapay se ha cerrado inesperadamente",
-  "scalapay.process.retry": "Clic para intentar el proceso de pago nuevamente",
+  "scalapay.process.retry": "Volver a intentar el proceso de pago",
   "scalapay.info.popup": "Activar el pop-up para realizar el pago. Da clic para más información",
   "scalapay.title.head": "Pagar con Scalapay",
   "scalapay.info.clic": "aquí"

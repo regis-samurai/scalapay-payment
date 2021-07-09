@@ -39,6 +39,7 @@ export async function createOrder(body: OrderBody, paymentId: string) {
     if (response.status !== 200) throw Error(response.statusText)
 
     const data = await response.json()
+
     return data
   } catch (e) {
     throw e
@@ -71,6 +72,7 @@ export async function captureOrder(params: CaptureParams) {
     if (response.status !== 200) throw Error(response.statusText)
 
     const data = await response.json()
+
     return data
   } catch (e) {
     // TODO: Validar correctamente los errores
@@ -88,6 +90,7 @@ export async function cancelOrder(paymentId: string) {
     if (response.status !== 200) throw Error(response.statusText)
 
     const data = await response.json()
+
     return data
   } catch (e) {
     // TODO: Validar correctamente los errores
@@ -95,7 +98,7 @@ export async function cancelOrder(paymentId: string) {
   }
 }
 
-export async function simulatePayments() {
+export async function simulatePayment() {
   try {
     bodyScalapay.paymentId = uuid()
     const response = await fetch(config.getUrl(), {
@@ -107,6 +110,7 @@ export async function simulatePayments() {
     if (response.status !== 200) throw Error(response.statusText)
 
     const data = await response.json()
+
     return data
   } catch (e) {
     // TODO: Validar correctamente los errores
