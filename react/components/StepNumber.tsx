@@ -1,4 +1,6 @@
-import React, { CSSProperties, FC } from 'react'
+import type { CSSProperties, FC } from 'react'
+import React from 'react'
+
 import styles from '../index.css'
 
 export interface StepNumberProps {
@@ -12,7 +14,7 @@ export const StepNumber: FC<StepNumberProps> = (props) => {
 
   return (
     <div>
-      <img src={iconImg} className={styles.imgLoading} />
+      <img src={iconImg} className={styles.imgLoading} alt="icon" />
       {!hideVerticalLine && (
         <div className={styles.verticalLine} style={style} />
       )}

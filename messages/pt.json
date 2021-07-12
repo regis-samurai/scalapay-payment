@@ -1,5 +1,4 @@
 {
-  "scalapay.step.step1": "Aguarde enquanto o seu pagamento é processado",
   "scalapay.step.step2": "Faça o pagamento na nova janela do Scalapay",
   "scalapay.step.step3": "Ao final do processo, você retornará à loja para verificar o pagamento",
   "scalapay.process.failedPayment": "O pagamento falhou. Por favor, tente outro método de pagamento",
@@ -11,4 +10,3 @@
   "scalapay.info.clic": "aqui",
   "scalapay.info.support": "Entre em contato com a equipe VTEX ou Scalapay para mais informações sobre o erro"
 }
-
