@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/ban-types */
-
-declare global {
-  const vtex: any
-  const vtexjs: any
-  const $: any
-}
+declare const vtex: any
+declare const vtexjs: any
+declare const $: any
+declare global {}
