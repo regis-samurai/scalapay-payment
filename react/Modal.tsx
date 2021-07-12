@@ -2,16 +2,19 @@ import React, { Component } from 'react'
 import type { InjectedIntlProps } from 'react-intl'
 import { injectIntl } from 'react-intl'
 
-import { StepNumber, StepBlock } from './components'
+import { StepBlock, StepNumber } from './components'
 import {
   Cancel,
   CheckSuccess,
   CreditCard,
+  CreditCardBlock,
   CreditCardError,
   Hourglass,
+  HourglassError,
   InterfaceBlock,
   InterfaceError,
   InterfaceVtex,
+  Number2Block,
   NumberBlock,
   NumberOneAnimated,
   NumberThree,
@@ -19,10 +22,7 @@ import {
   NumberTwo,
   NumberTwoAnimated,
   Retry,
-  hourglass_error,
-  number2block,
-  CreditCardBlock,
-  warning,
+  Warning,
 } from './config'
 import styles from './index.css'
 import {
@@ -129,8 +129,9 @@ class Modal extends Component<InjectedIntlProps, ModalState> {
             this.errorStepOne()
           }
         })
-        .catch((err) => {
+        .catch(() => {
           this.cancelPayment()
+          this.errorStepOne()
         })
     })
   }
@@ -311,12 +312,12 @@ class Modal extends Component<InjectedIntlProps, ModalState> {
           ...state.stepOne.blockStyles,
           color: ERROR_COLOR,
         },
-        imgBlock: hourglass_error,
+        imgBlock: HourglassError,
         message: 'scalapay.process.cancelProcess',
       },
       stepTwo: {
         ...state.stepTwo,
-        imgNumber: number2block,
+        imgNumber: Number2Block,
         blockStyles: {
           ...state.stepTwo.blockStyles,
           color: DISABLE_COLOR,
@@ -333,14 +334,17 @@ class Modal extends Component<InjectedIntlProps, ModalState> {
         imgBlock: InterfaceBlock,
       },
       showReload: true,
+      paymentWarning: true,
     }))
   }
 
   cancelPayment = (reload = false) => {
     if (!this.paymentId) throw new Error('PaymentId required')
+
     if (this.state.paymentCancel && reload) {
       window.location.reload()
-
+      // To prevent the execution cancelOrder()
+      // eslint-disable-next-line padding-line-between-statements
       return
     }
 
@@ -415,7 +419,7 @@ class Modal extends Component<InjectedIntlProps, ModalState> {
         </div>
         {this.state.paymentWarning && (
           <div className={styles.warning}>
-            <img src={warning} alt="waning" />
+            <img src={Warning} alt="waning" />
             <p>
               {intl.formatMessage({
                 id: 'scalapay.info.support',

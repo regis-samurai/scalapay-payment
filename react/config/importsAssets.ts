@@ -16,9 +16,9 @@ import NumberOneAnimated from '../assets/img/numberoneanimated.gif'
 import NumberThreeAnimated from '../assets/img/numberthreeanimated.gif'
 import NumberTwoAnimated from '../assets/img/numbertwoanimated.gif'
 import Retry from '../assets/img/retry.png'
-import hourglass_error from '../assets/img/hourglass_error.png'
-import number2block from '../assets/img/number2block.png'
-import warning from '../assets/img/warning.png'
+import HourglassError from '../assets/img/hourglass_error.png'
+import Number2Block from '../assets/img/number2block.png'
+import Warning from '../assets/img/warning.png'
 
 export {
   Hourglass,
@@ -39,7 +39,7 @@ export {
   Retry,
   CreditCardError,
   InterfaceError,
-  hourglass_error,
-  number2block,
-  warning,
+  HourglassError,
+  Number2Block,
+  Warning,
 }
