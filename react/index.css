@@ -124,6 +124,29 @@
   text-decoration: underline;
 }
 
+
+.closeWindow {
+  cursor: pointer;
+  margin: 10px 10px 20px 40px;
+  border-radius: 10px;
+  width: 80%;
+  background: #FFB100;
+  padding: 10px;
+}
+
+.closeWindow p {
+  font-size: 15px;
+  line-height: 14px;
+  color: #0b172b;
+  margin: 0;
+  text-align: center;
+  line-height: 20px;
+}
+
+.closeWindow p:hover {
+  text-decoration: underline;
+}
+
 .hiperlink {
   color: #0b172b;
   font-weight: 800;

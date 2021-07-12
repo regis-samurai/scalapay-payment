@@ -1,11 +1,14 @@
 {
-  "scalapay.step.step1": "Wait while your payment is processing",
-  "scalapay.step.step2": "Make the payment in the new Scalapay window 222",
-  "scalapay.step.step3": "You will be returning to the store. Verify the payment",
-  "scalapay.process.failedPayment": "The payment process has been failed. Please, try another payment method",
-  "scalapay.process.closeWindow": "Scalapay payment window closed unexpectedly",
-  "scalapay.process.retry": "Click to try the payment process again",
-  "scalapay.info.popup": "Enable the pop-up to done the payment, for more information clic",
-  "scalapay.title.head": "Pagar com Scalapay",
-  "scalapay.info.clic": "here"
+  "scalapay.step.step1": "Aguarde enquanto o seu pagamento é processado",
+  "scalapay.step.step2": "Faça o pagamento na nova janela do Scalapay",
+  "scalapay.step.step3": "Ao final do processo, você retornará à loja para verificar o pagamento",
+  "scalapay.process.failedPayment": "O pagamento falhou. Por favor, tente outro método de pagamento",
+  "scalapay.process.closeWindow": "A janela de pagamento Scalapay fechou inesperadamente",
+  "scalapay.process.retry": "Clique para tentar o processo de pagamento novamente",
+  "scalapay.process.cancelProcess": "Erro ao tentar processar o pagamento",
+  "scalapay.info.popup": "Ative o pop-up para efetuar o pagamento. Clique para mais informações",
+  "scalapay.title.head": "Pague com Scalapay",
+  "scalapay.info.clic": "aqui",
+  "scalapay.info.support": "Entre em contato com a equipe VTEX ou Scalapay para mais informações sobre o erro"
 }
+

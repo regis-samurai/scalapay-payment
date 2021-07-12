@@ -17,6 +17,9 @@ import {
   NumberThreeAnimated,
   NumberTwoAnimated,
   Retry,
+  hourglass_error,
+  number2block,
+  CreditCardBlock,
 } from './config'
 import styles from './index.css'
 import {
@@ -37,7 +40,6 @@ type StepState = {
   imgNumber: any
   imgBlock: any
   message?: string
-  fontColor?: string
   blockColor?: string
   statusFailed: boolean | null
 }
@@ -62,13 +64,14 @@ class Modal extends Component<InjectedIntlProps, ModalState> {
       imgBlock: Hourglass,
       statusFailed: null,
       message: 'scalapay.step.step1',
+      blockColor: BASE_COLOR,
     },
     stepTwo: {
       imgNumber: NumberTwo,
       imgBlock: CreditCard,
       statusFailed: null,
       message: 'scalapay.step.step2',
-      fontColor: BASE_COLOR,
+      blockColor: BASE_COLOR,
     },
     stepThree: {
       imgNumber: NumberThree,
@@ -232,7 +235,7 @@ class Modal extends Component<InjectedIntlProps, ModalState> {
             imgNumber: Cancel,
             imgBlock: CreditCardError,
             message: 'scalapay.process.failedPayment',
-            fontColor: ERROR_COLOR,
+            blockColor: ERROR_COLOR,
             statusFailed: true,
           },
           stepThree: {
@@ -270,7 +273,7 @@ class Modal extends Component<InjectedIntlProps, ModalState> {
         imgNumber: NumberTwoAnimated,
         imgBlock: CreditCard,
         message: 'scalapay.step.step2',
-        fontColor: BASE_COLOR,
+        blockColor: BASE_COLOR,
         statusFailed: null,
       },
       stepThree: {
@@ -291,17 +294,40 @@ class Modal extends Component<InjectedIntlProps, ModalState> {
     }
   }
 
+  errorStepOne = () => {
+    this.setState({
+      stepOne: {
+        ...this.state.stepOne,
+        imgNumber: Cancel,
+        blockColor: ERROR_COLOR,
+        imgBlock: hourglass_error,
+        message: 'scalapay.process.cancelProcess'
+      },
+      stepTwo: {
+        ...this.state.stepTwo,
+        imgNumber: number2block,
+        blockColor: DISABLE_COLOR,
+        imgBlock: CreditCardBlock
+      },
+      stepThree: {
+        ...this.state.stepThree,
+        imgNumber: NumberBlock,
+        blockColor: DISABLE_COLOR,
+        imgBlock: InterfaceBlock
+      },
+      showReload: true
+    })
+  }
+
   cancelPayment = () => {
     if (!this.paymentId) throw new Error('PaymentId required')
 
     cancelOrder(this.paymentId)
       .then((res) => {
         if (res.responseData?.statusCode === 200) {
-          // TODO: Informar al usuario que no se pudo realizar el paso 1
-          console.log('Pago cancelado exitosamente')
+          this.errorStepOne()
         } else {
-          // TODO: Hacer lo mismo del catch, usar una función para no repetir código
-          console.log('No se pudo cancelar el pago')
+          this.errorStepOne()
         }
       })
       .catch((err) => {
@@ -309,7 +335,7 @@ class Modal extends Component<InjectedIntlProps, ModalState> {
         console.log('Error al cancelar el pago: ', err)
       })
       .finally(() => {
-        // TODO: Mostrar botón para cerrar la modal
+        this.setState({showReload: true})
       })
   }
 
@@ -322,7 +348,7 @@ class Modal extends Component<InjectedIntlProps, ModalState> {
           imgNumber: Cancel,
           imgBlock: CreditCardError,
           message: 'scalapay.process.closeWindow',
-          fontColor: ERROR_COLOR,
+          blockColor: ERROR_COLOR,
           statusFailed: true,
         },
         stepThree: {
@@ -383,10 +409,10 @@ class Modal extends Component<InjectedIntlProps, ModalState> {
           <div className={styles.column} id={styles.column2}>
             {/* Step 1 */}
             <div className={styles.containerInfo}>
-              <img src={Hourglass} className={styles.imgInfo} alt="loading" />
-              <p className={styles.textInfo}>
+              <img src={this.state.stepOne.imgBlock} className={styles.imgInfo} alt="loading" />
+              <p className={styles.textInfo} style={{ color: this.state.stepOne.blockColor }}>
                 {intl.formatMessage({
-                  id: 'scalapay.step.step1',
+                  id: this.state.stepOne.message,
                 })}
               </p>
             </div>
@@ -400,7 +426,7 @@ class Modal extends Component<InjectedIntlProps, ModalState> {
               />
               <p
                 className={styles.textInfo}
-                style={{ color: this.state.stepTwo.fontColor }}
+                style={{ color: this.state.stepTwo.blockColor }}
               >
                 {intl.formatMessage({
                   id: this.state.stepTwo.message,
@@ -415,20 +441,6 @@ class Modal extends Component<InjectedIntlProps, ModalState> {
                       {intl.formatMessage({
                         id: 'scalapay.process.retry',
                       })}
-                    </p>
-                  </div>
-                )}
-                {this.state.showReload && (
-                  <div className={styles.retry}>
-                    <p>
-                      Close this window{' '}
-                      <a
-                        href="#"
-                        className={styles.hiperlink}
-                        onClick={() => location.reload()}
-                      >
-                        here
-                      </a>
                     </p>
                   </div>
                 )}
@@ -468,6 +480,13 @@ class Modal extends Component<InjectedIntlProps, ModalState> {
             </a>
           </p>
         </div> */}
+        {this.state.showReload && (
+          <div className={styles.closeWindow} onClick={() => location.reload()}>
+            <p>
+              <b>X</b> Close this window to do the pay with another payment method
+            </p>
+          </div>
+        )}
       </div>
     )
   }

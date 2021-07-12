@@ -5,7 +5,9 @@
   "scalapay.process.failedPayment": "The payment process has been failed. Please, try another payment method",
   "scalapay.process.closeWindow": "Scalapay payment window closed unexpectedly",
   "scalapay.process.retry": "Click to try the payment process again",
+  "scalapay.process.cancelProcess": "Failed to trying to process the payment",
   "scalapay.info.popup": "Enable the pop-up to done the payment, for more information clic",
   "scalapay.title.head": "Pay with Scalapay",
-  "scalapay.info.clic": "here"
+  "scalapay.info.clic": "here",
+  "scalapay.info.support": "Please, contact with VTEX team or Scalapay for more information about the error"
 }
