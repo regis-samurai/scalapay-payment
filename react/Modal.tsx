@@ -19,6 +19,10 @@ import {
   NumberTwo,
   NumberTwoAnimated,
   Retry,
+  hourglass_error,
+  number2block,
+  CreditCardBlock,
+  warning,
 } from './config'
 import styles from './index.css'
 import {
@@ -70,6 +74,8 @@ class Modal extends Component<InjectedIntlProps, ModalState> {
     },
     showReload: false,
     childWindowClosedUnexpectedly: false,
+    paymentCancel: false,
+    paymentWarning: false,
   }
 
   private childWindow: Window | null = null
@@ -242,6 +248,8 @@ class Modal extends Component<InjectedIntlProps, ModalState> {
         },
         showReload: true,
       }))
+
+      this.cancelPayment()
     }
   }
 
@@ -293,24 +301,68 @@ class Modal extends Component<InjectedIntlProps, ModalState> {
     }
   }
 
-  cancelPayment = () => {
+  errorStepOne = () => {
+    this.setState((state) => ({
+      stepOne: {
+        ...state.stepOne,
+        imgNumber: Cancel,
+        blockStyles: {
+          ...state.stepOne.blockStyles,
+          color: ERROR_COLOR,
+        },
+        imgBlock: hourglass_error,
+        message: 'scalapay.process.cancelProcess',
+      },
+      stepTwo: {
+        ...state.stepTwo,
+        imgNumber: number2block,
+        blockStyles: {
+          ...state.stepTwo.blockStyles,
+          color: DISABLE_COLOR,
+        },
+        imgBlock: CreditCardBlock,
+      },
+      stepThree: {
+        ...state.stepThree,
+        imgNumber: NumberBlock,
+        blockStyles: {
+          ...state.stepThree.blockStyles,
+          color: DISABLE_COLOR,
+        },
+        imgBlock: InterfaceBlock,
+      },
+      showReload: true,
+    }))
+  }
+
+  cancelPayment = (reload = false) => {
     if (!this.paymentId) throw new Error('PaymentId required')
+    if (this.state.paymentCancel && reload) {
+      window.location.reload()
+
+      return
+    }
+
     cancelOrder(this.paymentId)
       .then((res) => {
         if (res.responseData?.statusCode === 200) {
-          // TODO: Informar al usuario que no se pudo realizar el paso 1
+          this.errorStepOne()
+          this.setState({ paymentCancel: true })
           console.log('Pago cancelado exitosamente')
         } else {
-          // TODO: Hacer lo mismo del catch, usar una función para no repetir código
+          this.errorStepOne()
           console.log('No se pudo cancelar el pago')
         }
       })
       .catch((err) => {
-        // TODO: Informar error al usuario y pedirle que se comunique con soporte
+        // TODO: Informar error al usuario y pedirle que se comunique con soporte --- mensaje de VTEX
+        this.setState({ paymentWarning: true })
         console.log('Error al cancelar el pago: ', err)
       })
       .finally(() => {
-        // TODO: Mostrar botón para cerrar la modal
+        if (reload) {
+          window.location.reload()
+        }
       })
   }
 
@@ -323,7 +375,10 @@ class Modal extends Component<InjectedIntlProps, ModalState> {
           imgNumber: Cancel,
           imgBlock: CreditCardError,
           message: 'scalapay.process.closeWindow',
-          fontColor: ERROR_COLOR,
+          blockStyles: {
+            ...state.stepTwo.blockStyles,
+            color: ERROR_COLOR,
+          },
           statusFailed: true,
         },
         stepThree: {
@@ -331,12 +386,19 @@ class Modal extends Component<InjectedIntlProps, ModalState> {
           imgNumber: NumberBlock,
           imgBlock: InterfaceBlock,
           message: 'scalapay.process.failedPayment',
-          blockColor: DISABLE_COLOR,
+          blockStyles: {
+            ...state.stepThree.blockStyles,
+            color: DISABLE_COLOR,
+          },
           statusFailed: true,
         },
         childWindowClosedUnexpectedly: true,
       }))
     }
+  }
+
+  closeModal = () => {
+    this.cancelPayment()
   }
 
   render() {
@@ -352,6 +414,16 @@ class Modal extends Component<InjectedIntlProps, ModalState> {
             })}
           </h2>
         </div>
+        {this.state.paymentWarning && (
+          <div className={styles.warning}>
+            <img src={warning} alt="waning" />
+            <p>
+              {intl.formatMessage({
+                id: 'scalapay.info.support',
+              })}
+            </p>
+          </div>
+        )}
         <div className={styles.row}>
           <div className={styles.column} id={styles.column1}>
             {/* Step 1 */}
@@ -391,24 +463,21 @@ class Modal extends Component<InjectedIntlProps, ModalState> {
                   </p>
                 </button>
               )}
-              {this.state.showReload && (
-                <div className={styles.retry}>
-                  <p>
-                    Close this window{' '}
-                    <button
-                      className={styles.hiperlink}
-                      onClick={() => window.location.reload()}
-                    >
-                      here
-                    </button>
-                  </p>
-                </div>
-              )}
             </StepBlock>
             {/* Step 3 */}
             <StepBlock {...stepThree} />
           </div>
         </div>
+        {this.state.showReload && (
+          <div className={styles.closeWindow}>
+            <button
+              className={styles.hiperlink}
+              onClick={() => this.cancelPayment(true)}
+            >
+              Close this window
+            </button>
+          </div>
+        )}
       </div>
     )
   }

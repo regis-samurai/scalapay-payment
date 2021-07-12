@@ -55,4 +55,5 @@ export interface ModalState {
   stepThree: StepState
   showReload: boolean
   childWindowClosedUnexpectedly: boolean
+  paymentCancel: boolean
 }
