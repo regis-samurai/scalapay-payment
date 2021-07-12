@@ -56,4 +56,5 @@ export interface ModalState {
   showReload: boolean
   childWindowClosedUnexpectedly: boolean
   paymentCancel: boolean
+  paymentWarning: boolean
 }

@@ -82,10 +82,13 @@ export async function captureOrder(params: CaptureParams) {
 
 export async function cancelOrder(paymentId: string) {
   try {
-    const response = await fetch(config.getUrl(`${paymentId}/inbound/cancel`), {
-      method: 'POST',
-      headers,
-    })
+    const response = await fetch(
+      config.getUrl(`${`${paymentId}`}/inbound/cancel`),
+      {
+        method: 'POST',
+        headers,
+      }
+    )
 
     if (response.status !== 200) throw Error(response.statusText)
 

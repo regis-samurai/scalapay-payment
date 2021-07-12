@@ -126,6 +126,7 @@ class Modal extends Component<InjectedIntlProps, ModalState> {
             this.createChildWindow()
           } else {
             this.cancelPayment()
+            this.errorStepOne()
           }
         })
         .catch((err) => {
@@ -346,16 +347,14 @@ class Modal extends Component<InjectedIntlProps, ModalState> {
     cancelOrder(this.paymentId)
       .then((res) => {
         if (res.responseData?.statusCode === 200) {
-          this.errorStepOne()
           this.setState({ paymentCancel: true })
           console.log('Pago cancelado exitosamente')
         } else {
-          this.errorStepOne()
+          this.setState({ paymentWarning: true })
           console.log('No se pudo cancelar el pago')
         }
       })
       .catch((err) => {
-        // TODO: Informar error al usuario y pedirle que se comunique con soporte --- mensaje de VTEX
         this.setState({ paymentWarning: true })
         console.log('Error al cancelar el pago: ', err)
       })
