@@ -3,4 +3,3 @@
 declare const vtex: any
 declare const vtexjs: any
 declare const $: any
-declare global {}

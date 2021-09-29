@@ -1,2 +1,142 @@
-export * from './configScalapay'
-export * from './importsAssets'
+import { importAssets } from './imports'
+import type { DataContext } from '../shared/types'
+import { States } from '../shared/const'
+
+const colorFontError = '#DD4B39'
+const colorFontSuccess = '#333333'
+
+export const config: DataContext[] = [
+  {
+    step: 1,
+    head: {
+      iconNumber: importAssets.number1,
+      iconNumberLoading: importAssets.number1Loading,
+      title: 'store/standard-modal.step.title1',
+      description: 'store/standard-modal.step.subtitle1',
+      iconSuccess: importAssets.iconSuccess,
+      iconError: importAssets.iconError,
+      iconBlock: importAssets.number1block,
+    },
+    body: {
+      msgLoading: 'store/standard-modal.step.step1Loading',
+      msgSuccess: 'store/standard-modal.step.step1Success',
+      msgError: 'store/standard-modal.step.step1Error',
+      msgCloseWindow: 'store/standard-modal.process.closeWindow',
+      msgSessionExpired: 'store/standard-modal.process.sesionExpired',
+      imgLoadStep: importAssets.iconStep1,
+      imgSuccessStep: importAssets.iconStep1,
+      imgErrorStep: importAssets.iconStep1Error,
+    },
+    colorFontError,
+    colorFontSuccess,
+    endpointConnector: importAssets.setPayload,
+    status: States.Loading,
+    retries: true,
+    retriesData: {
+      img: importAssets.retry,
+      description: 'store/standard-modal.process.step1Retry',
+      retryFunction: () => {},
+    },
+    close: true,
+    closeModal: {
+      img: importAssets.close,
+      description: 'store/standard-modal.process.step3Close',
+      closedFunction: () => window.location.reload(),
+    },
+    alert: false,
+    alertData: {
+      img: importAssets.warning,
+      description: 'store/standard-modal.info.step1Alert',
+      type: 'warning',
+      url: '{"google": "https://support.google.com/chrome/answer/95472?hl=en&co=GENIE.Platform%3DDesktop", "mozilla": "https://support.mozilla.org/en-US/kb/pop-blocker-settings-exceptions-troubleshooting#w_is-the-pop-up-blocker-on-and-enabled-for-this-site", "safari": "https://support.apple.com/guide/safari/block-pop-ups-sfri40696/mac", "opera":"", "edge":"https://support.microsoft.com/en-us/microsoft-edge/block-pop-ups-in-microsoft-edge-1d8ba4f8-f385-9a0b-e944-aa47339b6bb5"}',
+    },
+  },
+  {
+    step: 2,
+    head: {
+      iconNumber: importAssets.number2block,
+      iconNumberLoading: importAssets.number2Loading,
+      title: 'store/standard-modal.step.title2',
+      description: 'store/standard-modal.step.subtitle2',
+      iconSuccess: importAssets.iconSuccess,
+      iconError: importAssets.iconError,
+      iconBlock: importAssets.number2block,
+    },
+    body: {
+      msgLoading: 'store/standard-modal.process.closeWindow',
+      msgSuccess: 'store/standard-modal.step.step2Success',
+      msgError: 'store/standard-modal.step.step2Error',
+      msgSessionExpired: 'store/standard-modal.process.sesionExpired',
+      imgLoadStep: importAssets.iconStep2,
+      imgSuccessStep: importAssets.iconStep2,
+      imgErrorStep: importAssets.iconStep2Error,
+    },
+    colorFontError,
+    colorFontSuccess,
+    endpointConnector: importAssets.createOrder,
+    status: States.Waiting,
+    retries: false,
+    retriesData: {
+      img: importAssets.retry,
+      description: 'store/standard-modal.process.step2Retry',
+      retryFunction: () => {},
+    },
+    close: true,
+    closeModal: {
+      img: importAssets.close,
+      description: 'store/standard-modal.process.step3Close',
+      closedFunction: () => window.location.reload(),
+    },
+    alert: false,
+    alertData: {
+      img: importAssets.info,
+      description: 'store/standard-modal.info.step2Alert',
+      type: 'info',
+      url: '',
+    },
+  },
+  {
+    step: 3,
+    head: {
+      iconNumber: importAssets.number3,
+      iconNumberLoading: importAssets.number3Loading,
+      title: 'store/standard-modal.step.title3',
+      description: 'store/standard-modal.step.subtitle3',
+      iconSuccess: importAssets.iconSuccess,
+      iconError: importAssets.iconError,
+      iconBlock: importAssets.number3block,
+    },
+    body: {
+      msgLoading: 'store/standard-modal.step.step3Loading',
+      msgSuccess: 'store/standard-modal.step.step3Success',
+      msgError: 'store/standard-modal.step.step3Error',
+      msgSessionExpired: 'store/standard-modal.process.sesionExpired',
+      imgLoadStep: importAssets.iconStep3,
+      imgSuccessStep: importAssets.iconStep3,
+      imgErrorStep: importAssets.iconStep3Error,
+    },
+    colorFontError,
+    colorFontSuccess,
+    endpointConnector: null,
+    status: States.Waiting,
+    retries: false,
+    retriesData: {
+      img: importAssets.retry,
+      description: 'store/standard-modal.process.step3Retry',
+      retryFunction: () => {},
+    },
+    close: false,
+    closeModal: {
+      img: importAssets.close,
+      description: 'store/standard-modal.process.step3Close',
+      closedFunction: () => window.location.reload(),
+    },
+    alert: false,
+    alertData: {
+      img: importAssets.info,
+      description: 'store/standard-modal.info.step3Alert',
+      type: 'info',
+      url: '',
+    },
+  },
+]

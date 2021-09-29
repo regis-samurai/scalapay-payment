@@ -1,12 +1,9 @@
 {
-  "name": "scalapay-payment",
-  "private": true,
+  "name": "standard-modal",
+  "version": "1.0.6",
+  "main": "index.tsx",
   "license": "MIT",
-  "scripts": {
-    "test": "vtex-test-tools test"
-  },
   "dependencies": {
-    "classnames": "^2.3.1",
     "react-intl": "2.7.2"
   },
   "devDependencies": {

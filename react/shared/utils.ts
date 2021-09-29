@@ -1,18 +1,6 @@
 import { config } from '../config/configScalapay'
 import type { OrderBody } from './types'
 
-export const uuid = () => {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
-    .replace(/[xy]/g, (c) => {
-      const r = (Math.random() * 16) | 0
-      const v = c === 'x' ? r : (r & 0x3) | 0x8
-
-      return v.toString(16)
-    })
-    .replace(/-/g, '')
-    .toUpperCase()
-}
-
 export const getOrderData = () => {
   const body: OrderBody = {} as OrderBody
   const { orderForm } = vtexjs.checkout
@@ -96,6 +84,7 @@ export const backdrop = (active = true) => {
         height: '100vh',
         top: 0,
         'z-index': '100',
+        left: '0',
       })
       .appendTo($('body'))
   }

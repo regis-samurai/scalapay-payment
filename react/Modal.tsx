@@ -1,142 +1,438 @@
-import React, { Component } from 'react'
-import type { InjectedIntlProps } from 'react-intl'
-import { injectIntl } from 'react-intl'
+/* eslint-disable @typescript-eslint/no-useless-constructor */
+import React from 'react'
 
-import { StepBlock, StepNumber } from './components'
-import {
-  Cancel,
-  CheckSuccess,
-  CreditCard,
-  CreditCardBlock,
-  CreditCardError,
-  Hourglass,
-  HourglassError,
-  InterfaceBlock,
-  InterfaceError,
-  InterfaceVtex,
-  Number2Block,
-  NumberBlock,
-  NumberOneAnimated,
-  NumberThree,
-  NumberThreeAnimated,
-  NumberTwo,
-  NumberTwoAnimated,
-  Retry,
-  Warning,
-} from './config'
 import styles from './index.css'
-import {
-  cancelOrder,
-  captureOrder,
-  createOrder,
-  simulatePayment,
-} from './services/connector'
-import type { ModalState } from './shared'
-import { backdrop, getOrderData } from './shared'
+import { config } from './config'
+import Head from './components/Head'
+import Body from './components/Body'
+import type {
+  DataContext,
+  HeadModal,
+  BodyModal,
+  ResponseConnector,
+  OrderBody,
+} from './shared/types'
+import { ModalProvider } from './modalContext'
+import { States, DataForm } from './shared/const'
+import { getOrderData, backdrop } from './shared/utils'
+import { captureOrder, cancelOrder } from './services/connector'
+import { importAssets } from './config/imports'
+
+interface ModalState {
+  headModal: HeadModal[]
+  bodyModal: BodyModal
+  appPayload: string
+  orderForm: OrderBody
+  closedUnexpected: boolean
+  paySuccess: string
+}
+
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+interface ModalProps {
+  appPayload: string
+}
 
 type CheckoutUrl = {
   value: string | null
   expires: string | null
 }
-const BASE_COLOR = 'black' as const
-const PINK_COLOR = '#f9aac8' as const
-const ERROR_COLOR = '#dd4b39' as const
-const DISABLE_COLOR = '#c6c6c6' as const
 
-class Modal extends Component<InjectedIntlProps, ModalState> {
-  state = {
-    stepOne: {
-      imgNumber: NumberOneAnimated,
-      imgBlock: Hourglass,
-      statusFailed: null,
-      message: 'scalapay.step.step1',
-      blockStyles: {
-        color: BASE_COLOR,
-      },
-    },
-    stepTwo: {
-      imgNumber: NumberTwo,
-      imgBlock: CreditCard,
-      statusFailed: null,
-      message: 'scalapay.step.step2',
-      blockStyles: {
-        color: BASE_COLOR,
-      },
-    },
-    stepThree: {
-      imgNumber: NumberThree,
-      imgBlock: InterfaceVtex,
-      statusFailed: null,
-      message: 'scalapay.step.step3',
-      blockStyles: {
-        color: BASE_COLOR,
-      },
-    },
-    showReload: false,
-    childWindowClosedUnexpectedly: false,
-    paymentCancel: false,
-    paymentWarning: false,
-  }
-
+class Modal extends React.Component<ModalProps, ModalState> {
   private childWindow: Window | null = null
   private intervalId: number | null = null
-  private paymentId: string | null = null
   private checkoutUrl: CheckoutUrl = {
     value: null,
     expires: null,
   }
 
-  componentDidMount() {
-    $(window).trigger('removePaymentLoading.vtex')
-    window.addEventListener('message', this.handleMessages, false)
-    backdrop()
-    this.getCheckoutUrl()
+  public state: {
+    headModal: HeadModal[]
+    bodyModal: BodyModal
+    appPayload: string
+    orderForm: OrderBody
+    closedUnexpected: boolean
+    paySuccess: string
+  } = {
+    headModal: [],
+    bodyModal: {
+      img: '',
+      description: '',
+      colorFont: '',
+      showSupport: false,
+      dataSupport: {
+        img: '',
+        description: '',
+        supportFunction: () => {},
+      },
+
+      alert: false,
+      alertData: {
+        img: '',
+        description: '',
+        type: '',
+        url: '',
+      },
+    },
+    appPayload: '',
+    orderForm: DataForm,
+    closedUnexpected: false,
+    paySuccess: States.NoPayment,
   }
 
-  componentWillUnmount() {
+  constructor(props: never) {
+    super(props)
+  }
+
+  public componentDidMount() {
+    const { appPayload } = this.props
+
+    if (!appPayload) {
+      this.childWindow?.close()
+      this.cancelPayment()
+    }
+
+    const body = getOrderData()
+    const dataBody = config.find((item) => item.status === States.Loading)
+    const responsePayload = JSON.parse(appPayload)
+
+    if (responsePayload.inboundRequestsUrl) {
+      this.setState((state) => ({
+        bodyModal: {
+          ...state.bodyModal,
+          description: dataBody?.body.msgSuccess ?? '',
+          colorFont: dataBody?.colorFontSuccess ?? '',
+          img: dataBody?.body.imgLoadStep ?? '',
+          alert: dataBody?.alert ?? false,
+          alertData: {
+            img: dataBody?.alertData.img ?? '',
+            description: dataBody?.alertData.description ?? '',
+            type: dataBody?.alertData.type ?? '',
+            url: dataBody?.alertData.url
+              ? this.validateNavigator(dataBody.alertData.url)
+              : '',
+          },
+        },
+        headModal: this.fillModal(),
+        appPayload,
+        orderForm: body,
+        paySuccess: States.NoPayment,
+      }))
+
+      this.openModal()
+      this.blockReload()
+    } else {
+      this.setState((state) => ({
+        bodyModal: {
+          ...state.bodyModal,
+          description: `${responsePayload.messageError}.`,
+          colorFont: dataBody?.colorFontError ?? '',
+          img: dataBody?.body.imgErrorStep ?? '',
+        },
+        headModal: this.fillModal(true),
+        paySuccess: States.Error,
+      }))
+
+      this.openModal()
+
+      setTimeout(() => {
+        window.location.reload()
+      }, 3000)
+    }
+  }
+
+  public blockReload = () => {
+    window.onbeforeunload = () => {
+      this.childWindow?.close()
+
+      return ''
+    }
+  }
+
+  public componentWillUnmount() {
     window.removeEventListener('message', this.handleMessages, false)
   }
 
-  getCheckoutUrl = () => {
-    simulatePayment().then((simulatePaymentRes) => {
-      const body = getOrderData()
+  public validateNavigator = (urlJson: string) => {
+    const nameNavigator = window.navigator.userAgent
+    const parseUrl = JSON.parse(urlJson)
+    let urlNavigator = ''
 
-      this.paymentId = simulatePaymentRes.paymentId
-      createOrder(body, simulatePaymentRes.paymentId)
-        .then((res) => {
-          if (res.responseData?.statusCode === 200) {
-            const { checkoutUrl, expiresDate } = JSON.parse(
-              res.responseData.content
-            )
+    if (
+      nameNavigator.indexOf('Chrome') > -1 &&
+      nameNavigator.indexOf('Edg') <= -1
+    ) {
+      urlNavigator = parseUrl.google
+    } else if (
+      nameNavigator.indexOf('Safari') > -1 &&
+      nameNavigator.indexOf('Edg') <= -1
+    ) {
+      urlNavigator = parseUrl.safari
+    } else if (
+      nameNavigator.indexOf('Opera') > -1 &&
+      nameNavigator.indexOf('Edg') <= -1
+    ) {
+      urlNavigator = parseUrl.opera
+    } else if (
+      nameNavigator.indexOf('Firefox') > -1 &&
+      nameNavigator.indexOf('Edg') <= -1
+    ) {
+      urlNavigator = parseUrl.mozilla
+    } else if (nameNavigator.indexOf('Edg') > -1) {
+      urlNavigator = parseUrl.edge
+    }
 
-            this.setState((state) => ({
-              stepOne: {
-                ...state.stepOne,
-                imgNumber: CheckSuccess,
-              },
-              stepTwo: {
-                ...state.stepTwo,
-                imgNumber: NumberTwoAnimated,
-              },
-            }))
-            this.checkoutUrl = {
-              value: checkoutUrl,
-              expires: expiresDate,
-            }
+    return urlNavigator
+  }
+
+  public openModal = () => {
+    backdrop()
+
+    $(window).trigger('removePaymentLoading.vtex')
+    window.addEventListener('message', this.handleMessages, false)
+  }
+
+  public fillModal = (error = false) => {
+    const headDataModal: HeadModal[] = []
+
+    config.forEach((item) => {
+      const obj = {
+        step: item.step,
+        head: {
+          title: item.head.title,
+          img: error
+            ? item.head.iconError
+            : item.status === States.Active || item.status === States.Loading
+            ? item.head.iconNumberLoading
+            : item.head.iconBlock,
+          description: item.head.description,
+          colorFont: error ? item.colorFontError : item.colorFontSuccess,
+        },
+        status: item.status,
+        functionStep: item.endpointConnector,
+      }
+
+      headDataModal.push(obj)
+    })
+
+    return headDataModal
+  }
+
+  public respondTransaction = (status = true) => {
+    backdrop(false)
+    $(window).trigger('transactionValidation.vtex', [status])
+  }
+
+  public handleCloseChildWindow = () => {
+    const getObjLoading = this.state.headModal.find(
+      (obj) => obj.status === States.Loading
+    )
+
+    if (!getObjLoading) return
+
+    const dataBody = config.find((data) => data.step === getObjLoading.step)
+
+    getObjLoading.status = States.Error
+
+    getObjLoading.head.img = dataBody?.head.iconError ?? ''
+    getObjLoading.status = States.Error
+
+    this.setState((state) => ({
+      bodyModal: {
+        ...state.bodyModal,
+        img: dataBody?.body.imgErrorStep ?? '',
+        description: dataBody?.body.msgLoading ?? '',
+        colorFont: dataBody?.colorFontError ?? '',
+        showSupport: true,
+        dataSupport: {
+          img: dataBody?.retriesData.img ?? '',
+          description: dataBody?.retriesData.description ?? '',
+          supportFunction: () => {
             this.createChildWindow()
-          } else {
-            this.cancelPayment()
-            this.errorStepOne()
-          }
-        })
-        .catch(() => {
-          this.cancelPayment()
-          this.errorStepOne()
-        })
+          },
+        },
+      },
+      closedUnexpected: true,
+    }))
+  }
+
+  public handleMessages = ({ data }: MessageEvent) => {
+    if (
+      data?.source !== 'scalapay-checkout' &&
+      data?.event !== 'payment-result'
+    ) {
+      return
+    }
+
+    const { payload } = data
+
+    if (payload.status === 'SUCCESS') {
+      this.setState({ paySuccess: States.Success, closedUnexpected: false })
+      captureOrder(
+        {
+          token: payload.orderToken,
+          merchantReference: vtexjs.checkout.orderForm.orderGroup,
+        },
+        JSON.parse(this.state.appPayload)
+      ).then((res) => {
+        const getObjLoading = this.state.headModal.find(
+          (obj) => obj.status === States.Loading
+        )
+
+        if (!getObjLoading) return
+        if (res.status === States.Approved) this.updateSteps(getObjLoading.step)
+      })
+      this.childWindow?.close()
+    } else {
+      this.setState({ paySuccess: States.Error, closedUnexpected: false })
+      const getObjLoading = this.state.headModal.find(
+        (obj) => obj.status === States.Loading
+      )
+
+      if (!getObjLoading) return
+
+      this.childWindow?.close()
+      this.updateSteps(getObjLoading.step)
+
+      this.cancelPayment()
+    }
+  }
+
+  public cancelPayment = () => {
+    cancelOrder(JSON.parse(this.state.appPayload)).then((res) => {
+      if (!res) return
+      const getObjLoading = this.state.headModal.find(
+        (obj) => obj.status === States.Loading
+      )
+
+      const dataBody = config.find((data) => data.step === getObjLoading?.step)
+
+      if (!getObjLoading || !dataBody) return
+
+      getObjLoading.head.img = dataBody.head.iconError
+      getObjLoading.status = States.Error
+
+      this.setState((state) => ({
+        bodyModal: {
+          ...state.bodyModal,
+          img: dataBody.body.imgErrorStep,
+          description: dataBody.body.msgError,
+          colorFont: dataBody.colorFontError,
+          showSupport: dataBody.close,
+        },
+      }))
+
+      window.onbeforeunload = null
+
+      setTimeout(() => window.location.reload(), 3000)
     })
   }
 
-  createChildWindow = () => {
+  public updateSteps = (step: number) => {
+    const { orderForm, appPayload } = this.state
+    const nextStep = step + 1
+    const arrayCurrent: DataContext | undefined = config.find(
+      (item: DataContext) => item.step === step
+    )
+
+    const arrayNext: DataContext | undefined = config.find(
+      (item: DataContext) => item.step === nextStep
+    )
+
+    if (step === 1) {
+      if (!arrayNext?.endpointConnector) return
+      arrayNext
+        ?.endpointConnector(orderForm, JSON.parse(appPayload))
+        .then((res: ResponseConnector) => {
+          if (!res.checkoutUrl) return
+          this.checkoutUrl.value = res.checkoutUrl
+          this.checkoutUrl.expires = res.expiresDate
+
+          if (res.expiresDate) {
+            this.validationExpirationDate(res.expiresDate)
+          }
+
+          this.showUpdateModal(arrayNext)
+
+          if (this.childWindow) return
+          this.setState((state) => ({
+            bodyModal: {
+              ...state.bodyModal,
+              showSupport: true,
+              dataSupport: {
+                img: importAssets.open,
+                description: 'store/standard-modal.openWindow',
+                supportFunction: () => this.createChildWindow(),
+              },
+            },
+          }))
+
+          if (arrayCurrent)
+            this.modifyHead(step, arrayCurrent, nextStep, arrayNext)
+        })
+    } else if (step === 2) {
+      if (!arrayNext) return
+      this.showUpdateModal(arrayNext)
+      if (arrayCurrent) this.modifyHead(step, arrayCurrent, nextStep, arrayNext)
+      if (this.state.paySuccess === States.Success) {
+        window.onbeforeunload = null
+        setTimeout(() => {
+          this.respondTransaction()
+        }, 3000)
+      }
+    }
+  }
+
+  /* eslint max-params: ["error", 4] */
+  /* eslint-env es6 */
+
+  public modifyHead = (
+    step: number,
+    dataHead: DataContext,
+    nextStep: number,
+    dataNext: DataContext
+  ) => {
+    const { headModal } = this.state
+    const cloneHead: HeadModal[] = headModal.slice()
+
+    cloneHead.forEach((item) => {
+      if (item.step === step) {
+        item.head.img = dataHead?.head.iconSuccess ?? ''
+        item.status = States.Success
+      } else if (item.step === nextStep) {
+        item.head.img = dataNext?.head.iconNumberLoading ?? ''
+        item.status = States.Loading
+      }
+    })
+
+    this.setState({ headModal: cloneHead })
+  }
+
+  public showUpdateModal = (dataStep: DataContext) => {
+    this.setState((state) => ({
+      bodyModal: {
+        ...state.bodyModal,
+        img: dataStep.body.imgLoadStep,
+        description: dataStep.body.msgSuccess,
+        colorFont: dataStep.colorFontSuccess,
+        alert: dataStep.alert,
+        alertData: {
+          img: dataStep.alertData.img,
+          description: dataStep.alertData.description,
+          type: dataStep.alertData.type,
+          url: dataStep.alertData.url,
+        },
+        showSupport: dataStep.retries,
+        dataSupport: {
+          img: dataStep.retriesData.img ?? '',
+          description: dataStep.retriesData.description ?? '',
+          supportFunction: dataStep.retriesData.retryFunction,
+        },
+      },
+      closedUnexpected: false,
+    }))
+  }
+
+  public createChildWindow = () => {
     if (!this.checkoutUrl.value) {
       throw new Error('Scalapay checkout url required')
     }
@@ -148,342 +444,112 @@ class Modal extends Component<InjectedIntlProps, ModalState> {
     const childWindowIsClosed = () => {
       if (this.childWindow?.closed) {
         this.intervalId != null && clearInterval(this.intervalId)
-        this.handleCloseChildWindow()
+        if (this.state.paySuccess === States.NoPayment)
+          this.handleCloseChildWindow()
       }
     }
 
-    this.childWindow = window.open(this.checkoutUrl.value, '_blank')
+    this.setState((state) => ({
+      bodyModal: {
+        ...state.bodyModal,
+        showSupport: false,
+      },
+    }))
+
+    this.childWindow = window.open(this.checkoutUrl.value ?? '', '_blank')
     this.intervalId = window.setInterval(childWindowIsClosed, 1000)
+
+    if (!this.state.closedUnexpected) return
+
+    const getObjLoading = this.state.headModal.find(
+      (obj) => obj.status === States.Error
+    )
+
+    if (!getObjLoading) return
+
+    const dataBody = config.find((data) => data.step === getObjLoading?.step)
+
+    getObjLoading.head.img = dataBody?.head.iconNumberLoading ?? ''
+    getObjLoading.status = States.Loading
+
+    this.setState((state) => ({
+      bodyModal: {
+        ...state.bodyModal,
+        img: dataBody?.body.imgLoadStep ?? '',
+        description: dataBody?.body.msgSuccess ?? '',
+        colorFont: dataBody?.colorFontSuccess ?? '',
+        dataSupport: {
+          img: importAssets.open,
+          description: 'store/standard-modal.openWindow',
+          supportFunction: () => this.createChildWindow(),
+        },
+      },
+      closedUnexpected: false,
+    }))
   }
 
-  handleMessages = ({ data }: MessageEvent) => {
-    if (
-      data?.source !== 'scalapay-checkout' &&
-      data?.event !== 'payment-result'
-    ) {
-      return
-    }
-
-    const { payload } = data
-
-    this.childWindow?.close()
-    if (payload.status === 'SUCCESS') {
-      if (!this.paymentId) throw new Error('PaymentId required')
-      this.setState((state) => ({
-        stepTwo: {
-          ...state.stepTwo,
-          imgNumber: CheckSuccess,
-          statusFailed: false,
-        },
-        stepThree: {
-          ...state.stepThree,
-          imgNumber: NumberThreeAnimated,
-        },
-      }))
-      captureOrder({
-        token: payload.orderToken,
-        merchantReference: vtexjs.checkout.orderForm.orderGroup,
-        paymentId: this.paymentId,
-      })
-        .then((res) => {
-          const content = JSON.parse(res.responseData.content)
-
-          if (
-            res.responseData?.statusCode === 200 &&
-            content.status === 'approved'
-          ) {
-            this.setState((state) => ({
-              stepThree: {
-                ...state.stepThree,
-                imgNumber: CheckSuccess,
-              },
-            }))
-            // Go to orderPlace
-            this.respondTransaction()
-          } else {
-            // Failed message for step 3
-            this.setState((state) => ({
-              stepThree: {
-                ...state.stepThree,
-                imgNumber: Cancel,
-                imgBlock: InterfaceError,
-                message: 'scalapay.process.failedPayment',
-                statusFailed: true,
-                blockStyles: {
-                  ...state.stepThree.blockStyles,
-                  color: ERROR_COLOR,
-                },
-              },
-              showReload: true,
-            }))
-            this.cancelPayment()
-          }
-        })
-        .catch((err) => {
-          // TODO: Informar al usuario y  cancelar pago
-          console.log('captureOrder err: ', err)
-          this.cancelPayment()
-        })
-    } else {
-      this.setState((state) => ({
-        stepTwo: {
-          ...state.stepTwo,
-          imgNumber: Cancel,
-          imgBlock: CreditCardError,
-          message: 'scalapay.process.failedPayment',
-          statusFailed: true,
-          blockStyles: {
-            ...state.stepTwo.blockStyles,
-            color: ERROR_COLOR,
-          },
-        },
-        stepThree: {
-          ...state.stepThree,
-          imgNumber: NumberBlock,
-          imgBlock: InterfaceBlock,
-          message: 'scalapay.process.failedPayment',
-          statusFailed: true,
-          blockStyles: {
-            ...state.stepThree.blockStyles,
-            color: DISABLE_COLOR,
-          },
-        },
-        showReload: true,
-      }))
-
-      this.cancelPayment()
-    }
-  }
-
-  // TODO: Usar esto para redirigir a orderPlaced o informar error
-  respondTransaction = (status = true) => {
-    backdrop(false)
-    $(window).trigger('transactionValidation.vtex', [status])
-  }
-
-  retryPayment = () => {
-    if (!this.checkoutUrl.expires) {
-      throw new Error(
-        'The expiration date of the url is required of the Scalapay checkout'
+  public expirePayment = () => {
+    cancelOrder(JSON.parse(this.state.appPayload)).then((res) => {
+      if (!res) return
+      const getObjLoading = this.state.headModal.find(
+        (obj) => obj.status === States.Loading
       )
-    }
 
-    const checkoutUrlExpiresDate = new Date(this.checkoutUrl.expires).getTime()
-    const currentDate = new Date().getTime()
+      const dataBody = config.find((data) => data.step === getObjLoading?.step)
 
-    this.setState((state) => ({
-      stepTwo: {
-        ...state.stepTwo,
-        imgNumber: NumberTwoAnimated,
-        imgBlock: CreditCard,
-        message: 'scalapay.step.step2',
-        statusFailed: null,
-        blockStyles: {
-          ...state.stepThree.blockStyles,
-          color: DISABLE_COLOR,
-        },
-      },
-      stepThree: {
-        ...state.stepThree,
-        imgNumber: NumberThree,
-        imgBlock: InterfaceVtex,
-        message: 'scalapay.process.failedPayment',
-        statusFailed: null,
-        blockStyles: {
-          ...state.stepThree.blockStyles,
-          color: DISABLE_COLOR,
-        },
-      },
-      childWindowClosedUnexpectedly: false,
-    }))
-    if (currentDate <= checkoutUrlExpiresDate) {
-      this.createChildWindow()
-    } else {
-      this.getCheckoutUrl()
-    }
-  }
+      if (!getObjLoading) return
 
-  errorStepOne = () => {
-    this.setState((state) => ({
-      stepOne: {
-        ...state.stepOne,
-        imgNumber: Cancel,
-        blockStyles: {
-          ...state.stepOne.blockStyles,
-          color: ERROR_COLOR,
-        },
-        imgBlock: HourglassError,
-        message: 'scalapay.process.cancelProcess',
-      },
-      stepTwo: {
-        ...state.stepTwo,
-        imgNumber: Number2Block,
-        blockStyles: {
-          ...state.stepTwo.blockStyles,
-          color: DISABLE_COLOR,
-        },
-        imgBlock: CreditCardBlock,
-      },
-      stepThree: {
-        ...state.stepThree,
-        imgNumber: NumberBlock,
-        blockStyles: {
-          ...state.stepThree.blockStyles,
-          color: DISABLE_COLOR,
-        },
-        imgBlock: InterfaceBlock,
-      },
-      showReload: true,
-      paymentWarning: true,
-    }))
-  }
+      getObjLoading.head.img = dataBody?.head.iconError ?? ''
+      getObjLoading.status = States.Error
 
-  cancelPayment = (reload = false) => {
-    if (!this.paymentId) throw new Error('PaymentId required')
+      this.childWindow?.close()
 
-    if (this.state.paymentCancel && reload) {
-      window.location.reload()
-      // To prevent the execution cancelOrder()
-      // eslint-disable-next-line padding-line-between-statements
-      return
-    }
-
-    cancelOrder(this.paymentId)
-      .then((res) => {
-        if (res.responseData?.statusCode === 200) {
-          this.setState({ paymentCancel: true })
-          console.log('Pago cancelado exitosamente')
-        } else {
-          this.setState({ paymentWarning: true })
-          console.log('No se pudo cancelar el pago')
-        }
-      })
-      .catch((err) => {
-        this.setState({ paymentWarning: true })
-        console.log('Error al cancelar el pago: ', err)
-      })
-      .finally(() => {
-        if (reload) {
-          window.location.reload()
-        }
-      })
-  }
-
-  handleCloseChildWindow = () => {
-    // If statusFailed2 is null step two is not finished
-    if (this.state.stepTwo.statusFailed === null) {
       this.setState((state) => ({
-        stepTwo: {
-          ...state.stepTwo,
-          imgNumber: Cancel,
-          imgBlock: CreditCardError,
-          message: 'scalapay.process.closeWindow',
-          blockStyles: {
-            ...state.stepTwo.blockStyles,
-            color: ERROR_COLOR,
-          },
-          statusFailed: true,
+        bodyModal: {
+          ...state.bodyModal,
+          img: dataBody?.body.imgErrorStep ?? '',
+          description: dataBody?.body.msgSessionExpired ?? '',
+          colorFont: dataBody?.colorFontError ?? '',
+          showSupport: false,
         },
-        stepThree: {
-          ...state.stepThree,
-          imgNumber: NumberBlock,
-          imgBlock: InterfaceBlock,
-          message: 'scalapay.process.failedPayment',
-          blockStyles: {
-            ...state.stepThree.blockStyles,
-            color: DISABLE_COLOR,
-          },
-          statusFailed: true,
-        },
-        childWindowClosedUnexpectedly: true,
       }))
-    }
+
+      setTimeout(() => {
+        window.location.reload()
+      }, 3000)
+    })
   }
 
-  closeModal = () => {
-    this.cancelPayment()
+  public validationExpirationDate = (expiresDate: string) => {
+    const setIntervalvalId = setInterval(() => {
+      const dateNow = new Date().toISOString()
+
+      if (dateNow >= expiresDate) {
+        clearInterval(setIntervalvalId)
+
+        this.expirePayment()
+      }
+    }, 300000)
   }
 
-  render() {
-    const { intl } = this.props
-    const { stepOne, stepTwo, stepThree } = this.state
-
+  public render() {
     return (
       <div className={styles.wrapper}>
-        <div className={styles.headerModal}>
-          <h2 className={styles.titleHeader}>
-            {intl.formatMessage({
-              id: 'scalapay.title.head',
-            })}
-          </h2>
-        </div>
-        {this.state.paymentWarning && (
-          <div className={styles.warning}>
-            <img src={Warning} alt="waning" />
-            <p>
-              {intl.formatMessage({
-                id: 'scalapay.info.support',
-              })}
-            </p>
-          </div>
-        )}
-        <div className={styles.row}>
-          <div className={styles.column} id={styles.column1}>
-            {/* Step 1 */}
-            <StepNumber
-              iconImg={stepOne.imgNumber}
-              style={{
-                borderColor: stepTwo.statusFailed ? ERROR_COLOR : PINK_COLOR,
-              }}
-            />
-            {/* Step 2 */}
-            <StepNumber
-              iconImg={stepTwo.imgNumber}
-              style={{
-                borderColor: stepThree.statusFailed
-                  ? DISABLE_COLOR
-                  : PINK_COLOR,
-              }}
-            />
-            {/* Step 3 */}
-            <StepNumber iconImg={stepThree.imgNumber} hideVerticalLine />
-          </div>
-          <div className={styles.column} id={styles.column2}>
-            {/* Step 1 */}
-            <StepBlock {...stepOne} />
-            {/* Step 2 */}
-            <StepBlock {...stepTwo}>
-              {this.state.childWindowClosedUnexpectedly && (
-                <button
-                  onClick={() => this.retryPayment()}
-                  className={styles.retry}
-                >
-                  <img src={Retry} alt="retry" />
-                  <p>
-                    {intl.formatMessage({
-                      id: 'scalapay.process.retry',
-                    })}
-                  </p>
-                </button>
-              )}
-            </StepBlock>
-            {/* Step 3 */}
-            <StepBlock {...stepThree} />
-          </div>
-        </div>
-        {this.state.showReload && (
-          <div className={styles.closeWindow}>
-            <button
-              className={styles.hiperlink}
-              onClick={() => this.cancelPayment(true)}
-            >
-              Close this window
-            </button>
-          </div>
-        )}
+        <ModalProvider
+          value={{
+            headModal: this.state.headModal,
+            bodyModal: this.state.bodyModal,
+            updateSteps: this.updateSteps,
+            orderForm: this.state.orderForm,
+            appPayload: this.state.appPayload,
+          }}
+        >
+          <Head />
+          <Body />
+        </ModalProvider>
       </div>
     )
   }
 }
 
-export default injectIntl(Modal)
+export default Modal
