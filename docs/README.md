@@ -1,11 +1,17 @@
+
+
+
+
+
+![Screenshot_55](https://user-images.githubusercontent.com/8409481/136115707-4cc1432c-f91a-40db-983a-92fefd8739d8.png)
+
 # Scalapay
 
 This project has the objective to allow it to integrate VTEX with the payment method Scalapay.
 To understand better the functionality between the VTEX interface and VTEX backend or VTEX IO and Scalapay, see the architecture define below.
 
-# [Infrastructure](https://drive.google.com/file/d/1tUmfQisKNm9cizfguKowkDU-X-bxpg7P/view?usp=sharing)
+![Untitled (18)](https://user-images.githubusercontent.com/8409481/136115659-f0203a0e-6302-418b-9165-2e828bd20adb.png)
 
-![https://s3-us-west-2.amazonaws.com/secure.notion-static.com/d457c9b7-73df-4e6f-b6ab-8c62232cda9c/Untitled.png](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/d457c9b7-73df-4e6f-b6ab-8c62232cda9c/Untitled.png)
 
 The built of this project has the following parts:
 
@@ -20,45 +26,50 @@ Depending on the type of response (SUCCESS or ERROR), the data will be present i
 
 To use the Scalapay method payment in the checkout choose the option as is shown in the image below
 
-![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/53c435bc-306a-4837-9a64-65b3095c8abf/Untitled.png)
+![Untitled (19)](https://user-images.githubusercontent.com/8409481/136115790-7d559dcd-b7fd-49ac-b3b1-b1259e7c435d.png)
+
 
 The Scalapay payment method only works correctly with currency EUR. If the user tries to make the payment with another option, it will show an error in the interface.
 
 **\*The Scalapay payment method only works correctly with currency EUR. If the user tries to make the payment with another option, the modal will show an error. If the store not has currency EUR to pay for the products, contact the VTEX team through Slack**.\*
 
-![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/3a5f4cc2-78cf-4b17-a447-5dbf631b1d7a/Untitled.png)
+<img src="https://user-images.githubusercontent.com/8409481/136115819-48c0e4c1-9909-48f5-862b-c08f30560e9e.png" width="700" height="400" />
+
 
 When the pay flow is correct, the flow looks as below images.
 
-![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/a389a28f-1e0b-4549-8e71-f09450f2630d/Untitled.png)
+<img src="https://user-images.githubusercontent.com/8409481/136115852-d9828689-7c73-49a8-97b6-ba5d124e555a.png" width="700" height="400" />
 
-![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/0aaaad98-884c-4f5b-bb2e-5b2064bb1597/Untitled.png)
+<img src="https://user-images.githubusercontent.com/8409481/136115857-8a28b777-4c97-44a5-8137-7feefb4bc326.png" width="700" height="400" />
 
-![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/5f2cc24b-9b7d-4627-96f4-80b64718048a/Untitled.png)
+<img src="https://user-images.githubusercontent.com/8409481/136115858-3c40ab37-43d4-4ae7-bd04-5aa6312bfb0d.png" width="700" height="400" />
 
-![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/8aca1fd9-04f9-41f2-b893-6658feccee6d/Untitled.png)
+<img src="https://user-images.githubusercontent.com/8409481/136115861-a0871a93-fd20-468c-8837-ece96c887d64.png" width="700" height="400" />
+
 
 When you close the Scalapay window, the VTEX checkout modal shows a message to indicate the error. Also, a button appears to open the Scalapay window again and finish the payment.
 
-![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/ec898333-75c9-4208-8e28-4956dda59d50/Untitled.png)
+<img src="https://user-images.githubusercontent.com/8409481/136115980-860819d9-53d2-4a08-bd94-e5ad49aa46e0.png" width="700" height="400" />
+
 
 But if the payment process failed in the Scalapay, the error will be shown in the modal and then the window will be reloaded to choose another payment method.
 
-![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/de960304-6dbb-4013-bec7-877a281eca8e/Untitled.png)
+<img src="https://user-images.githubusercontent.com/8409481/136116017-5807957e-2586-4756-9a8d-41a15f9962a9.png" width="700" height="400" />
+
 
 The development of the Scalapay interface is responsive allows adjustment in many devices.
 
-![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/46324cb1-a4be-432a-860f-8e91add5fbb3/Untitled.png)
+![Untitled (27)](https://user-images.githubusercontent.com/8409481/136116040-b1b696a4-e6a0-4868-b891-fa6d99f3695c.png)
 
 The payment process has an inactivity time of 30 minutes. If completed or surpass the time, the payment will be canceled and you should start the payment process again.
 
-![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/5dddf496-4cdc-47e2-95cb-06d9e5958a9d/Untitled.png)
+<img src="https://user-images.githubusercontent.com/8409481/136116073-34fc683b-bee6-452c-826e-38a2cf60a683.png" width="700" height="400" />
 
 # Connector integration
 
 To connect the front with the backend was created a folder with scripts in charge of consumption of REST service orderdetail (create order), capture (capture the order when the payment is successful), cancelation (it is used the payment failed or the modal is closed without finish the payment)
 
-![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/3f2f27b1-8946-49bd-94aa-d4473713536d/Untitled.png)
+![Untitled (29)](https://user-images.githubusercontent.com/8409481/136116104-046b728c-4dec-4d2b-bdfb-9004b6c2b950.png)
 
 When the modal is open this gets the information of the payload (the payload is the VTEX backend response). If the field inboundRequestsUrl in the object has information, the request to the endpoint 'orderdetail' is started. The connector scripts contain the 'fetch' in charge of doing the request. This script uses the vtexPayment and inboundRequest. You could consider the node folder and files inside of this as the communication bridge
 
