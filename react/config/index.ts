@@ -92,7 +92,7 @@ export const config: DataContext[] = [
       img: importAssets.info,
       description: 'store/standard-modal.info.step2Alert',
       type: 'info',
-      url: '',
+      url: '{"google": "https://support.google.com/chrome/answer/95472?hl=en&co=GENIE.Platform%3DDesktop", "mozilla": "https://support.mozilla.org/en-US/kb/pop-blocker-settings-exceptions-troubleshooting#w_is-the-pop-up-blocker-on-and-enabled-for-this-site", "safari": "https://support.apple.com/guide/safari/block-pop-ups-sfri40696/mac", "opera":"", "edge":"https://support.microsoft.com/en-us/microsoft-edge/block-pop-ups-in-microsoft-edge-1d8ba4f8-f385-9a0b-e944-aa47339b6bb5"}',
     },
   },
   {

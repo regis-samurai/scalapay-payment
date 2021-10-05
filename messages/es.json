@@ -22,7 +22,7 @@
   "store/standard-modal.title.head": "Método de pago emergente",
   "store/standard-modal.info.clic": "aquí",
   "store/standard-modal.info.step1Alert": "Por favor, pónganse en contacto con el equipo de VTEX para más información sobre el error presentado",
-  "store/standard-modal.info.step2Alert": "Por favor, pónganse en contacto con el equipo de VTEX para más información sobre el error presentado",
+  "store/standard-modal.info.step2Alert": "Habilite la ventana emergente para realizar el pago, para mas información de clic aquí ",
   "store/standard-modal.info.step3Alert": "Por favor, pónganse en contacto con el equipo de VTEX para más información sobre el error presentado",
   "store/standard-modal.process.step3Close": "Cierre esta modal",
   "store/standard-modal.process.closeWindowMsg": "ESTA VENTANA SE CERRARÁ",

@@ -30,7 +30,7 @@ const Body: FC<InjectedIntlProps> = (props) => {
               src={data.bodyModal.alertData.img}
               alt={data.bodyModal.alertData.description}
             />
-            <p style={{ color: data.bodyModal.colorFont }}>
+            <p>
               {intl.formatMessage({
                 id: data.bodyModal.alertData.description,
               })}

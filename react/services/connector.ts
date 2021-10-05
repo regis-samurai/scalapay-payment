@@ -16,7 +16,7 @@ export async function setPayload() {
   const status = new Promise((resolve) => {
     setTimeout(() => {
       resolve(responseService.success)
-    }, 5000)
+    }, 3000)
   })
 
   return status

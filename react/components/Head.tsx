@@ -6,6 +6,7 @@ import { injectIntl } from 'react-intl'
 import ModalContext from '../modalContext'
 import styles from '../index.css'
 import { States } from '../shared/const'
+import { importAssets } from '../config/imports'
 
 const Head: FC<InjectedIntlProps> = (props) => {
   const { intl } = props
@@ -56,7 +57,19 @@ const Head: FC<InjectedIntlProps> = (props) => {
     setData(tempArray)
   }, [dataModal, widthDiv, intl, sentPetition])
 
-  return <div className={styles.headContainer}>{data}</div>
+  return (
+    <div className={styles.headContainer}>
+      {data}
+      <div>
+        <button
+          onClick={() => window.location.reload()}
+          className={styles.btnClose}
+        >
+          <img src={importAssets.closeModal} alt="close" />
+        </button>
+      </div>
+    </div>
+  )
 }
 
 export default injectIntl(Head)

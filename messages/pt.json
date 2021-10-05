@@ -22,7 +22,7 @@
   "store/standard-modal.title.head": "Método de pagamento pop-up",
   "store/standard-modal.info.clic": "aqui",
   "store/standard-modal.info.step1Alert": "Entre em contato com a equipe da VTEX para obter mais informações sobre o erro apresentado.",
-  "store/standard-modal.info.step2Alert": "Entre em contato com a equipe da VTEX para obter mais informações sobre o erro apresentado.",
+  "store/standard-modal.info.step2Alert": "Habilite a janela pop-up para fazer o pagamento, para mais informações clique aqui ",
   "store/standard-modal.info.step3Alert": "Entre em contato com a equipe da VTEX para obter mais informações sobre o erro apresentado.",
   "store/standard-modal.process.step3Close": "Fechar este modal",
   "store/standard-modal.process.closeWindowMsg": "THIS WINDOW WILL BE CLOSED",

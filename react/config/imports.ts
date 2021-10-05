@@ -9,6 +9,7 @@ import number2Loading from '../assets/img/head/number2animated.gif'
 import number3Loading from '../assets/img/head/number3animated.gif'
 import iconSuccess from '../assets/img/head/success.png'
 import iconError from '../assets/img/head/error.png'
+import closeModal from '../assets/img/head/close.png'
 import iconStep1 from '../assets/img/body/icon-step1.png'
 import iconStep1Error from '../assets/img/body/icon-step1-error.png'
 import iconStep2 from '../assets/img/body/icon-step2.png'
@@ -34,6 +35,7 @@ export const importAssets = {
   number3Loading,
   iconSuccess,
   iconError,
+  closeModal,
   iconStep1,
   iconStep1Error,
   iconStep2,

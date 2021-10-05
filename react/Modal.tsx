@@ -154,6 +154,8 @@ class Modal extends React.Component<ModalProps, ModalState> {
 
   public validateNavigator = (urlJson: string) => {
     const nameNavigator = window.navigator.userAgent
+
+    if (!urlJson) return ''
     const parseUrl = JSON.parse(urlJson)
     let urlNavigator = ''
 
@@ -283,16 +285,8 @@ class Modal extends React.Component<ModalProps, ModalState> {
       })
       this.childWindow?.close()
     } else {
-      this.setState({ paySuccess: States.Error, closedUnexpected: false })
-      const getObjLoading = this.state.headModal.find(
-        (obj) => obj.status === States.Loading
-      )
-
-      if (!getObjLoading) return
-
       this.childWindow?.close()
-      this.updateSteps(getObjLoading.step)
-
+      this.setState({ paySuccess: States.Error, closedUnexpected: false })
       this.cancelPayment()
     }
   }
@@ -300,6 +294,7 @@ class Modal extends React.Component<ModalProps, ModalState> {
   public cancelPayment = () => {
     cancelOrder(JSON.parse(this.state.appPayload)).then((res) => {
       if (!res) return
+
       const getObjLoading = this.state.headModal.find(
         (obj) => obj.status === States.Loading
       )
@@ -317,13 +312,13 @@ class Modal extends React.Component<ModalProps, ModalState> {
           img: dataBody.body.imgErrorStep,
           description: dataBody.body.msgError,
           colorFont: dataBody.colorFontError,
-          showSupport: dataBody.close,
+          showSupport: false,
         },
       }))
 
       window.onbeforeunload = null
 
-      setTimeout(() => window.location.reload(), 3000)
+      setTimeout(() => window.location.reload(), 2000)
     })
   }
 
@@ -343,7 +338,13 @@ class Modal extends React.Component<ModalProps, ModalState> {
       arrayNext
         ?.endpointConnector(orderForm, JSON.parse(appPayload))
         .then((res: ResponseConnector) => {
-          if (!res.checkoutUrl) return
+          if (!res.checkoutUrl) {
+            window.onbeforeunload = null
+            this.expirePayment()
+
+            return
+          }
+
           this.checkoutUrl.value = res.checkoutUrl
           this.checkoutUrl.expires = res.expiresDate
 
@@ -353,18 +354,22 @@ class Modal extends React.Component<ModalProps, ModalState> {
 
           this.showUpdateModal(arrayNext)
 
-          if (this.childWindow) return
-          this.setState((state) => ({
-            bodyModal: {
-              ...state.bodyModal,
-              showSupport: true,
-              dataSupport: {
-                img: importAssets.open,
-                description: 'store/standard-modal.openWindow',
-                supportFunction: () => this.createChildWindow(),
+          this.createChildWindow()
+
+          if (!this.childWindow) {
+            this.setState((state) => ({
+              bodyModal: {
+                ...state.bodyModal,
+                showSupport: true,
+                alert: true,
+                dataSupport: {
+                  img: importAssets.open,
+                  description: 'store/standard-modal.openWindow',
+                  supportFunction: () => this.createChildWindow(),
+                },
               },
-            },
-          }))
+            }))
+          }
 
           if (arrayCurrent)
             this.modifyHead(step, arrayCurrent, nextStep, arrayNext)
@@ -377,7 +382,7 @@ class Modal extends React.Component<ModalProps, ModalState> {
         window.onbeforeunload = null
         setTimeout(() => {
           this.respondTransaction()
-        }, 3000)
+        }, 1000)
       }
     }
   }
@@ -419,7 +424,7 @@ class Modal extends React.Component<ModalProps, ModalState> {
           img: dataStep.alertData.img,
           description: dataStep.alertData.description,
           type: dataStep.alertData.type,
-          url: dataStep.alertData.url,
+          url: this.validateNavigator(dataStep.alertData.url),
         },
         showSupport: dataStep.retries,
         dataSupport: {
@@ -453,6 +458,7 @@ class Modal extends React.Component<ModalProps, ModalState> {
       bodyModal: {
         ...state.bodyModal,
         showSupport: false,
+        alert: false,
       },
     }))
 
