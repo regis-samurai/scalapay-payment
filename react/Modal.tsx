@@ -143,6 +143,7 @@ class Modal extends React.Component<ModalProps, ModalState> {
   public blockReload = () => {
     window.onbeforeunload = () => {
       this.childWindow?.close()
+      this.cancelPayment()
 
       return ''
     }
