@@ -5,6 +5,30 @@
 
 ![Screenshot_55](https://user-images.githubusercontent.com/8409481/136115707-4cc1432c-f91a-40db-983a-92fefd8739d8.png)
 
+# Scalapay Connector - Install and configuration
+
+**Note**: For more information go to the GitHub repository **[scalapay-connector](https://github.com/vtex-apps/scalapay-connector)**.
+
+1. Install `vtex.integration-scalapay` in your account.
+
+```powershell
+vtex install vtex.integration-scalapay 0.1.x
+```
+
+2. Then go to admin account in module  `Transactions/Payments/Settings` , in tab `Gateway affiliations`  search Scalapay and click in Scalapay.
+
+    ![firefox_V3BrAtA606](https://user-images.githubusercontent.com/14004558/136470692-4d1ec4c5-fab5-4476-9a87-969a93414256.png)
+    
+3. Field fileds:
+    - Fill in the `Application Key` field with the vtex account name.
+    - Fill in the `Application Token` field with the token assigned for the Scalapay account.
+    - `Workspace` with the name of the default development environment for testing is master.
+    
+    ![firefox_ZIkZaRQY3T](https://user-images.githubusercontent.com/14004558/136470862-88ffd401-f981-42f4-a6d0-8ba69d70a580.png)
+
+    **Note**: If the Scalapay `Application Token` field is not filled, the connector will not work.
+
+
 # Scalapay
 
 This project has the objective to allow it to integrate VTEX with the payment method Scalapay.
