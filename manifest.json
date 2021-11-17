@@ -1,7 +1,7 @@
 {
   "name": "scalapay-payment",
   "vendor": "vtex",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "title": "Scalapay payment",
   "description": "Scalapay payment created with payment standard modal",
   "defaultLocale": "en",
@@ -16,6 +16,15 @@
   },
   "scripts": {
     "postreleasy": "vtex publish --public"
+  },
+  "billingOptions": {
+    "type": "free",
+    "support": {
+      "url": "https://support.vtex.com/hc/requests"
+    },
+    "availableCountries": [
+      "*"
+    ]
   },
   "policies": [
     {

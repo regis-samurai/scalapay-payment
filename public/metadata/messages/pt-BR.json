@@ -1,0 +1,15 @@
+
+{
+    "name": "Scalapay Payment",
+    "headline": "Mostrar ao usuário em detalhes o status das transações realizadas com o meio de pagamento Scalapay",
+    "overview": "VTEX Scalapay Payment é um aplicativo que informa ao usuário o estado de sua transação ao escolher o Scalapay como meio de pagamento. Esta aplicação utiliza um conector que permitirá efetuar pagamentos, basta efetuar a instalação, seguir alguns passos do manual de configuração e poderá efetuar todos os seus pagamentos com este meio de pagamento. Assim tão fácil!.",
+    "features": [
+      "Mostra o status da transação para o usuário",
+      "Impedir que a transação seja cancelada sem completar o pagamento",
+      "Diga ao usuário as etapas a serem executadas na transação"
+    ],
+    "websiteURL": "https://vtex.com/",
+    "support": {
+      "url": "https://support.vtex.com/hc/requests"
+    }
+  }

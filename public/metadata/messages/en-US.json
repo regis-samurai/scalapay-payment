@@ -1,0 +1,14 @@
+{
+    "name": "Scalapay Payment",
+    "headline": "Show to the user the transaction's status do with the Scalapay payment method",
+    "overview": "VTEX Scalapay payment is an application to status report to the user about the transaction making with Scalapay.  This application uses a connector that allows making payments. Just do the installation and follow the steps of the configuration manual. Is that easy!.",
+    "features": [
+      "Show the transaction status to the user",
+      "Avoid to cancel the transaction without finish the payment",
+      "Define the steps to should do the user while make the transactions"
+    ],
+    "websiteURL": "https://vtex.com/",
+    "support": {
+      "url": "https://support.vtex.com/hc/requests"
+    }
+}
