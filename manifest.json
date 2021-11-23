@@ -1,7 +1,7 @@
 {
   "name": "scalapay-payment",
   "vendor": "vtex",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "title": "Scalapay payment",
   "description": "Scalapay payment created with payment standard modal",
   "defaultLocale": "en",
@@ -10,7 +10,7 @@
   "builders": {
     "react": "2.x",
     "pages": "0.x",
-    "messages": "0.x",
+    "messages": "1.x",
     "docs": "0.x",
     "node": "6.x"
   },
@@ -22,9 +22,7 @@
     "support": {
       "url": "https://support.vtex.com/hc/requests"
     },
-    "availableCountries": [
-      "*"
-    ]
+    "availableCountries": ["*"]
   },
   "policies": [
     {
